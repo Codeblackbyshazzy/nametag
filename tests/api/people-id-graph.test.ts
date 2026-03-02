@@ -327,15 +327,24 @@ describe('People Graph API Route', () => {
       expect(response.status).toBe(200);
       // Should have 3 nodes: person-1 (center), user, person-2
       expect(body.nodes).toHaveLength(3);
-      // Should only have 1 edge (person-1 -> person-2) since person-3 is not in the graph
-      expect(body.edges).toHaveLength(1);
-      expect(body.edges[0]).toEqual({
+      // Should have 2 edges: person-1 -> person-2 (forward) and person-2 -> person-1 (inverse fallback)
+      // person-3 is not in the graph so its edges are filtered out
+      expect(body.edges).toHaveLength(2);
+      expect(body.edges).toContainEqual({
         source: 'person-1',
         target: 'person-2',
         type: 'friend',
         color: '#00FF00',
         sourceLabel: 'Alice Smith',
         targetLabel: 'Bob Johnson',
+      });
+      expect(body.edges).toContainEqual({
+        source: 'person-2',
+        target: 'person-1',
+        type: 'friend',
+        color: '#00FF00',
+        sourceLabel: 'Bob Johnson',
+        targetLabel: 'Alice Smith',
       });
     });
 
@@ -386,6 +395,55 @@ describe('People Graph API Route', () => {
         target: 'person-1',
         type: 'family',
         color: '#FF0000',
+        sourceLabel: 'You',
+        targetLabel: 'Alice Smith',
+      });
+    });
+
+    it('should create both user relationship edges when inverse is null (symmetric fallback)', async () => {
+      const request = new NextRequest(
+        'http://localhost:3000/api/people/person-1/graph',
+      );
+
+      const mockPerson = {
+        id: 'person-1',
+        name: 'Alice',
+        surname: 'Smith',
+        nickname: null,
+        relationshipToUser: {
+          label: 'Relative',
+          color: '#6366F1',
+          inverse: null,
+        },
+        groups: [],
+        relationshipsFrom: [],
+      };
+
+      personFindUnique.mockResolvedValue(mockPerson);
+
+      const response = await GET(request, {
+        params: Promise.resolve({ id: 'person-1' }),
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.nodes).toHaveLength(2);
+      // Should have 2 edges even with null inverse: person -> user and user -> person
+      expect(body.edges).toHaveLength(2);
+      expect(body.edges).toContainEqual({
+        source: 'person-1',
+        target: 'user-user123',
+        type: 'Relative',
+        color: '#6366F1',
+        sourceLabel: 'Alice Smith',
+        targetLabel: 'You',
+      });
+      // Inverse edge falls back to type itself
+      expect(body.edges).toContainEqual({
+        source: 'user-user123',
+        target: 'person-1',
+        type: 'Relative',
+        color: '#6366F1',
         sourceLabel: 'You',
         targetLabel: 'Alice Smith',
       });

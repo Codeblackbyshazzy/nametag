@@ -93,18 +93,21 @@ export default function RelationshipManager({
         // Find the selected relationship type's inverse
         const selectedType = relationshipTypes.find(rt => rt.id === formData.relationshipTypeId);
 
-        if (!selectedType || !selectedType.inverseId) {
-          setError('Cannot create this relationship: no inverse relationship type defined');
+        if (!selectedType) {
+          setError('Cannot create this relationship: no relationship type selected');
           setIsLoading(false);
           return;
         }
+
+        // For symmetric types, inverseId may be null; use the type itself as fallback
+        const inverseTypeId = selectedType.inverseId || selectedType.id;
 
         // Update the person's relationshipToUserId with the inverse
         const response = await fetch(`/api/people/${personId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            relationshipToUserId: selectedType.inverseId,
+            relationshipToUserId: inverseTypeId,
           }),
         });
 
@@ -345,6 +348,22 @@ export default function RelationshipManager({
               )}
               <div>
                 <label className="block text-sm font-medium text-muted mb-1">
+                  {t('person')} *
+                </label>
+                <PersonAutocomplete
+                  people={peopleWithUser}
+                  value={formData.relatedPersonId}
+                  onChange={(personId) =>
+                    setFormData({ ...formData, relatedPersonId: personId })
+                  }
+                  placeholder={t('searchForPerson')}
+                  required
+                  onCreateNew={handleCreateNewPerson}
+                  highlightPersonId={currentUser?.id}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted mb-1">
                   {t('relationshipType')} *
                 </label>
                 <select
@@ -361,22 +380,6 @@ export default function RelationshipManager({
                     </option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted mb-1">
-                  {t('person')} *
-                </label>
-                <PersonAutocomplete
-                  people={peopleWithUser}
-                  value={formData.relatedPersonId}
-                  onChange={(personId) =>
-                    setFormData({ ...formData, relatedPersonId: personId })
-                  }
-                  placeholder={t('searchForPerson')}
-                  required
-                  onCreateNew={handleCreateNewPerson}
-                  highlightPersonId={currentUser?.id}
-                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-muted mb-1">
@@ -413,7 +416,7 @@ export default function RelationshipManager({
 
                     if (selectedPerson && currentUser && selectedPerson.id === currentUser.id) {
                       return t('formPreviewYour', {
-                        name: nameDisplay,
+                        personName: personName,
                         type: typeDisplay,
                       });
                     }

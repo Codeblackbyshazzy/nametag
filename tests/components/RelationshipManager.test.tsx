@@ -286,12 +286,118 @@ describe('RelationshipManager', () => {
       });
 
       const preview = screen.getByTestId('relationship-preview');
-      // Preview: "Me User is your Parent"
-      expect(preview.textContent).toContain('Me User');
-      expect(preview.textContent).toContain('your');
+      // Preview: "You are Alice's Parent"
+      expect(preview.textContent).toContain('You');
+      expect(preview.textContent).toContain("Alice's");
       expect(preview.textContent).toContain('Parent');
-      // Should NOT contain Alice's since it's the "your" variant
-      expect(preview.textContent).not.toContain("Alice's");
+    });
+
+    it('should show correct preview for symmetric types when currentUser is selected', () => {
+      const propsWithSymmetricType = {
+        ...propsWithAvailablePeople,
+        relationshipTypes: [
+          ...defaultProps.relationshipTypes,
+          {
+            id: 'type-relative',
+            name: 'RELATIVE',
+            label: 'Relative',
+            color: '#6366F1',
+            inverseId: null, // symmetric type with null inverseId
+          },
+        ],
+        currentUser: {
+          id: 'user-1',
+          name: 'Me',
+          surname: 'User',
+          nickname: null,
+        },
+        hasUserRelationship: false,
+      };
+
+      render(
+        <Wrapper>
+          <RelationshipManager {...propsWithSymmetricType} />
+        </Wrapper>
+      );
+
+      // Open the add modal
+      fireEvent.click(screen.getByText('Add Relationship'));
+
+      // Change relationship type to Relative
+      const typeSelect = screen.getByDisplayValue('Parent');
+      fireEvent.change(typeSelect, { target: { value: 'type-relative' } });
+
+      // Simulate selecting the current user
+      act(() => {
+        if (capturedOnChange) {
+          capturedOnChange('user-1', 'Me User');
+        }
+      });
+
+      const preview = screen.getByTestId('relationship-preview');
+      // Preview: "You are Alice's Relative"
+      expect(preview.textContent).toContain('You');
+      expect(preview.textContent).toContain("Alice's");
+      expect(preview.textContent).toContain('Relative');
+    });
+
+    it('should successfully submit symmetric type with null inverseId for user relationship', async () => {
+      const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({ person: {} }), { status: 200 }),
+      );
+
+      const propsWithSymmetricType = {
+        ...propsWithAvailablePeople,
+        relationshipTypes: [
+          {
+            id: 'type-relative',
+            name: 'RELATIVE',
+            label: 'Relative',
+            color: '#6366F1',
+            inverseId: null,
+          },
+        ],
+        currentUser: {
+          id: 'user-1',
+          name: 'Me',
+          surname: 'User',
+          nickname: null,
+        },
+        hasUserRelationship: false,
+      };
+
+      render(
+        <Wrapper>
+          <RelationshipManager {...propsWithSymmetricType} />
+        </Wrapper>
+      );
+
+      // Open the add modal
+      fireEvent.click(screen.getByText('Add Relationship'));
+
+      // Simulate selecting the current user
+      act(() => {
+        if (capturedOnChange) {
+          capturedOnChange('user-1', 'Me User');
+        }
+      });
+
+      // Submit the form
+      const submitButton = screen.getByText('Add Relationship', { selector: 'button[type="submit"]' });
+      await act(async () => {
+        fireEvent.click(submitButton);
+      });
+
+      // Should have called fetch with the type's own id as fallback (not errored)
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining('/api/people/person-alice'),
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({ relationshipToUserId: 'type-relative' }),
+        }),
+      );
+
+      fetchSpy.mockRestore();
     });
   });
 });

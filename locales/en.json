@@ -673,7 +673,7 @@
     "isRelationshipOf": "<name></name> is {personName}'s <type></type>",
     "isYourRelationship": "<name></name> is your <type></type>",
     "formPreview": "{name} is {personName}'s {type}",
-    "formPreviewYour": "{name} is your {type}",
+    "formPreviewYour": "You are {personName}'s {type}",
     "formPreviewSelectPerson": "Select a person",
     "formPreviewSelectType": "Select a type",
     "graphEdgeLabel": "is {type} of",

@@ -45,23 +45,24 @@ export function relationshipsWithUserToGraphEdges(
 ): GraphEdge[] {
   const edges: GraphEdge[] = [];
 
-  // Add edge from person to user (their relationship to you) if direct relationship exists
   if (person.relationshipToUser) {
+    // Add edge from person to user (their relationship to you)
     edges.push({
       source: person.id,
       target: userId,
       type: person.relationshipToUser.label,
       color: person.relationshipToUser.color || '#9CA3AF',
     });
-  }
 
-  // Add edge from user to person (your relationship to them) if inverse relationship exists
-  if (person.relationshipToUser?.inverse) {
+    // Add edge from user to person (your relationship to them)
+    // Use inverse type if available, otherwise use the type itself
+    // (correct for symmetric types where the inverse IS the same type)
+    const inverseType = person.relationshipToUser.inverse || person.relationshipToUser;
     edges.push({
       source: userId,
       target: person.id,
-      type: person.relationshipToUser.inverse.label,
-      color: person.relationshipToUser.inverse.color || '#9CA3AF',
+      type: inverseType.label,
+      color: inverseType.color || '#9CA3AF',
     });
   }
   return edges;
@@ -110,14 +111,17 @@ interface RelationshipWithInverse extends Relationship {
 export function inverseRelationshipToGraphEdge(
   relationship: RelationshipWithInverse,
 ): GraphEdge | undefined {
-  if (!relationship.relationshipType?.inverse) {
+  if (!relationship.relationshipType) {
     return;
   }
+  // Use inverse type if available, otherwise use the type itself
+  // (correct for symmetric types where the inverse IS the same type)
+  const inverseType = relationship.relationshipType.inverse || relationship.relationshipType;
   return {
     source: relationship.relatedPersonId,
     target: relationship.personId,
-    type: relationship.relationshipType.inverse.label,
-    color: relationship.relationshipType.inverse.color || '#999999',
+    type: inverseType.label,
+    color: inverseType.color || '#999999',
   };
 }
 

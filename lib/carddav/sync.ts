@@ -492,7 +492,11 @@ export async function syncToServer(
           if (loaded) photoDataUri = loaded;
         }
 
-        const vCardData = personToVCard(personWithAllRelations, { photoDataUri });
+        const preservedProps = mapping.preservedProperties as Array<{ key: string; value: string; group?: string; params: Record<string, string | string[]> }> | null;
+        const vCardData = personToVCard(personWithAllRelations, {
+          photoDataUri,
+          preservedProperties: preservedProps || undefined,
+        });
 
         if (mapping.href) {
           // Update existing vCard with retry

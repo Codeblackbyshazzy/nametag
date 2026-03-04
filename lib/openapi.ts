@@ -2117,9 +2117,9 @@ export function generateOpenAPISpec(): OpenAPISpec {
             '200': jsonResponse('Photo uploaded', {
               type: 'object',
               properties: {
-                filename: { type: 'string', description: 'Saved photo filename' },
+                photo: { type: 'string', description: 'Saved photo filename' },
               },
-              required: ['filename'],
+              required: ['photo'],
             }),
             '400': resp('Validation error or invalid image'),
             '401': ref401(),

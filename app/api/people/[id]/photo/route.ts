@@ -1,11 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { apiResponse, handleApiError, withAuth } from '@/lib/api-utils';
-import { processPhoto, ensureUserPhotoDir, deletePersonPhotos } from '@/lib/photo-storage';
+import { savePhotoFromBuffer, deletePersonPhotos } from '@/lib/photo-storage';
 import { createModuleLogger } from '@/lib/logger';
-import fs from 'fs/promises';
-import os from 'os';
-import path from 'path';
-import crypto from 'crypto';
 
 const log = createModuleLogger('people-photo');
 
@@ -52,28 +48,14 @@ export const POST = withAuth(async (request, session, context) => {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Process: validate format, resize, convert to JPEG
-    let processed: Buffer;
+    // Process, validate, and save photo
+    let filename: string;
     try {
-      processed = await processPhoto(buffer);
+      filename = await savePhotoFromBuffer(session.user.id, id, buffer);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to process photo';
       return apiResponse.error(message);
     }
-
-    // Ensure directory exists
-    const dirPath = await ensureUserPhotoDir(session.user.id);
-
-    // Delete any existing photo for this person
-    await deletePersonPhotos(session.user.id, id);
-
-    const filename = `${id}.jpg`;
-    const filePath = path.join(dirPath, filename);
-
-    // Write atomically: temp file + rename
-    const tmpPath = path.join(os.tmpdir(), `nametag-photo-${crypto.randomBytes(8).toString('hex')}`);
-    await fs.writeFile(tmpPath, processed);
-    await fs.rename(tmpPath, filePath);
 
     // Update person record
     await prisma.person.update({

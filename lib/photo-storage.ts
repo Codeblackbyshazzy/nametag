@@ -224,6 +224,31 @@ export async function savePhoto(
 }
 
 /**
+ * Save a photo from a raw Buffer (already read from an upload).
+ * Validates, processes, and writes the file atomically.
+ * Throws on failure (caller handles error responses).
+ */
+export async function savePhotoFromBuffer(
+  userId: string,
+  personId: string,
+  buffer: Buffer
+): Promise<string> {
+  const processed = await processPhoto(buffer);
+
+  const dirPath = await ensureUserPhotoDir(userId);
+  await deletePersonPhotos(userId, personId);
+
+  const filename = `${personId}.jpg`;
+  const filePath = path.join(dirPath, filename);
+
+  const tmpPath = path.join(os.tmpdir(), `nametag-photo-${crypto.randomBytes(8).toString('hex')}`);
+  await fs.writeFile(tmpPath, processed);
+  await fs.rename(tmpPath, filePath);
+
+  return filename;
+}
+
+/**
  * Delete a specific photo file
  */
 export async function deletePhoto(userId: string, filename: string): Promise<void> {

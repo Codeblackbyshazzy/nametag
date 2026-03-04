@@ -4,11 +4,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   personFindUnique: vi.fn(),
   personUpdate: vi.fn(),
-  processPhoto: vi.fn(),
-  ensureUserPhotoDir: vi.fn(),
+  savePhotoFromBuffer: vi.fn(),
   deletePersonPhotos: vi.fn(),
-  fsWriteFile: vi.fn(),
-  fsRename: vi.fn(),
 }));
 
 // Mock Prisma
@@ -32,24 +29,8 @@ vi.mock('../../lib/auth', () => ({
 
 // Mock photo-storage
 vi.mock('../../lib/photo-storage', () => ({
-  processPhoto: mocks.processPhoto,
-  ensureUserPhotoDir: mocks.ensureUserPhotoDir,
+  savePhotoFromBuffer: mocks.savePhotoFromBuffer,
   deletePersonPhotos: mocks.deletePersonPhotos,
-}));
-
-// Mock fs/promises
-vi.mock('fs/promises', () => ({
-  default: {
-    writeFile: mocks.fsWriteFile,
-    rename: mocks.fsRename,
-  },
-}));
-
-// Mock crypto to return deterministic values
-vi.mock('crypto', () => ({
-  default: {
-    randomBytes: () => ({ toString: () => 'abcdef01' }),
-  },
 }));
 
 // Import after mocking
@@ -80,11 +61,8 @@ function createFormDataRequest(
 describe('People Photo API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.processPhoto.mockResolvedValue(Buffer.from('processed-jpeg'));
-    mocks.ensureUserPhotoDir.mockResolvedValue('/data/photos/user-123');
+    mocks.savePhotoFromBuffer.mockResolvedValue('person-1.jpg');
     mocks.deletePersonPhotos.mockResolvedValue(undefined);
-    mocks.fsWriteFile.mockResolvedValue(undefined);
-    mocks.fsRename.mockResolvedValue(undefined);
     mocks.personUpdate.mockResolvedValue({ id: 'person-1', photo: 'person-1.jpg' });
   });
 
@@ -110,18 +88,12 @@ describe('People Photo API', () => {
         select: { id: true },
       });
 
-      // Should process the photo
-      expect(mocks.processPhoto).toHaveBeenCalled();
-
-      // Should ensure directory exists
-      expect(mocks.ensureUserPhotoDir).toHaveBeenCalledWith('user-123');
-
-      // Should delete existing photos before writing
-      expect(mocks.deletePersonPhotos).toHaveBeenCalledWith('user-123', 'person-1');
-
-      // Should write atomically (temp file then rename)
-      expect(mocks.fsWriteFile).toHaveBeenCalled();
-      expect(mocks.fsRename).toHaveBeenCalled();
+      // Should save photo via savePhotoFromBuffer
+      expect(mocks.savePhotoFromBuffer).toHaveBeenCalledWith(
+        'user-123',
+        'person-1',
+        expect.any(Buffer)
+      );
 
       // Should update person record
       expect(mocks.personUpdate).toHaveBeenCalledWith({
@@ -172,8 +144,8 @@ describe('People Photo API', () => {
 
     it('should return 400 for unsupported image format', async () => {
       mocks.personFindUnique.mockResolvedValue({ id: 'person-1' });
-      mocks.processPhoto.mockRejectedValue(
-        new Error('Unsupported image format. Supported: JPEG, PNG, GIF, WebP')
+      mocks.savePhotoFromBuffer.mockRejectedValue(
+        new Error('Unsupported image format')
       );
 
       const file = new Blob([Buffer.from('not-an-image')], { type: 'application/octet-stream' });

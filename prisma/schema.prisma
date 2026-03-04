@@ -645,6 +645,8 @@ model CardDavMapping {
   localVersion     String?  // Hash of local data
   remoteVersion    String?  // Hash of remote data
 
+  preservedProperties Json?  // Unknown vCard properties preserved for round-tripping
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

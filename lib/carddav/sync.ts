@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { createCardDavClient } from './client';
+import { createCardDavClient, VCard } from './client';
 import { personToVCard, vCardToPerson } from '@/lib/vcard';
 import { parseVCard } from '@/lib/carddav/vcard-parser';
 import { withRetry, categorizeError } from './retry';
@@ -499,18 +499,37 @@ export async function syncToServer(
         });
 
         if (mapping.href) {
-          // Update existing vCard with retry
-          const vCard = {
+          // Update existing vCard — with 412 (Precondition Failed) recovery.
+          // A 412 means our stored ETag is stale. We fetch the fresh ETag
+          // from the server and retry once.
+          let vCard = {
             url: mapping.href,
             etag: mapping.etag || '',
             data: '',
           };
-          const updated = await withRetry(
-            () => client.updateVCard(vCard, vCardData),
-            { maxAttempts: 3 }
-          );
 
-          // Store the new etag so the next sync doesn't see a false "remote changed"
+          let updated: VCard;
+          try {
+            updated = await withRetry(
+              () => client.updateVCard(vCard, vCardData),
+              { maxAttempts: 3 }
+            );
+          } catch (updateError) {
+            const is412 = updateError instanceof Error && updateError.message.includes('412');
+            if (!is412) throw updateError;
+
+            // 412: fetch fresh ETag from server and retry once
+            log.warn({ personId: mapping.personId, href: mapping.href }, '412 Precondition Failed — refreshing ETag and retrying');
+            const freshVCard = await client.fetchVCard(addressBook, mapping.href);
+            if (!freshVCard) {
+              throw new Error(`412 recovery failed: could not fetch vCard at ${mapping.href}`);
+            }
+
+            vCard = { url: mapping.href, etag: freshVCard.etag, data: '' };
+            updated = await client.updateVCard(vCard, vCardData);
+          }
+
+          // Store the new etag
           await prisma.cardDavMapping.update({
             where: { id: mapping.id },
             data: {

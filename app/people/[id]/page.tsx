@@ -163,7 +163,15 @@ export default async function PersonDetailsPage({
             },
           },
           include: {
-            person: true,
+            person: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+                nickname: true,
+                photo: true,
+              },
+            },
             relationshipType: {
               where: {
                 deletedAt: null,

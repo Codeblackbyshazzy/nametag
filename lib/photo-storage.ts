@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
+import sharp from 'sharp';
 import { createModuleLogger } from './logger';
 
 const log = createModuleLogger('photos');
@@ -93,6 +94,47 @@ function detectImageExtension(buffer: Buffer): string {
 }
 
 /**
+ * Check if a buffer contains a supported image format (JPEG, PNG, GIF, WebP)
+ * by inspecting magic bytes. Returns false for unknown formats and SVGs.
+ */
+export function isValidImageBuffer(buffer: Buffer): boolean {
+  if (buffer.length < 4) return false;
+
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return true;
+  // PNG: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return true;
+  // GIF: 47 49 46
+  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) return true;
+  // WebP: 52 49 46 46 ... 57 45 42 50
+  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+      buffer.length >= 12 && buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) return true;
+
+  return false;
+}
+
+/**
+ * Process a photo buffer: validate format, enforce size limit,
+ * resize to 256x256 (cover), convert to JPEG at 80% quality, strip EXIF.
+ * Throws on invalid input.
+ */
+export async function processPhoto(buffer: Buffer): Promise<Buffer> {
+  if (!isValidImageBuffer(buffer)) {
+    throw new Error('Unsupported image format. Supported: JPEG, PNG, GIF, WebP');
+  }
+
+  if (buffer.length > MAX_PHOTO_SIZE) {
+    throw new Error(`Photo exceeds maximum size of ${MAX_PHOTO_SIZE / (1024 * 1024)}MB`);
+  }
+
+  return sharp(buffer)
+    .resize(256, 256, { fit: 'cover' })
+    .rotate() // auto-rotate based on EXIF before stripping
+    .jpeg({ quality: 80 })
+    .toBuffer();
+}
+
+/**
  * Download a photo from a URL and return its buffer and extension
  */
 async function downloadPhoto(url: string): Promise<{ buffer: Buffer; ext: string }> {
@@ -146,26 +188,20 @@ export async function savePhoto(
 ): Promise<string | null> {
   try {
     let buffer: Buffer;
-    let ext: string;
 
     if (photoData.startsWith('http://') || photoData.startsWith('https://')) {
       // Download from URL
       const result = await downloadPhoto(photoData);
       buffer = result.buffer;
-      ext = result.ext;
     } else {
       // Parse data URI or raw base64
       const parsed = parsePhotoData(photoData);
       if (!parsed) return null;
       buffer = parsed.buffer;
-      ext = parsed.ext;
     }
 
-    // Enforce size limit
-    if (buffer.length > MAX_PHOTO_SIZE) {
-      log.warn({ personId, maxSizeMB: MAX_PHOTO_SIZE / (1024 * 1024) }, 'Photo exceeds size limit');
-      return null;
-    }
+    // Process: validate format, enforce size, resize, convert to JPEG, strip EXIF
+    const processed = await processPhoto(buffer);
 
     // Ensure directory exists
     const dirPath = await ensureUserPhotoDir(userId);
@@ -173,12 +209,12 @@ export async function savePhoto(
     // Delete any existing photo for this person (handle extension change)
     await deletePersonPhotos(userId, personId);
 
-    const filename = `${personId}.${ext}`;
+    const filename = `${personId}.jpg`;
     const filePath = path.join(dirPath, filename);
 
     // Write atomically: temp file + rename
     const tmpPath = path.join(os.tmpdir(), `nametag-photo-${crypto.randomBytes(8).toString('hex')}`);
-    await fs.writeFile(tmpPath, buffer);
+    await fs.writeFile(tmpPath, processed);
     await fs.rename(tmpPath, filePath);
 
     return filename;

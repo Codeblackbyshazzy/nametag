@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.31.1](https://github.com/mattogodoy/nametag/compare/v0.31.0...v0.31.1) (2026-03-05)
+
+
+### Bug Fixes
+
+* normalize unknown-year dates for non-YEARS reminder intervals ([e32d5f6](https://github.com/mattogodoy/nametag/commit/e32d5f658f84970a1a84d5e5ee068eccc605ed3f))
+* normalize unknown-year dates for non-YEARS reminder intervals ([0653f3c](https://github.com/mattogodoy/nametag/commit/0653f3cba570b2f9f0b706912edffe02d79ab7f8))
+
 ## [0.31.0](https://github.com/mattogodoy/nametag/compare/v0.30.0...v0.31.0) (2026-03-05)
 
 

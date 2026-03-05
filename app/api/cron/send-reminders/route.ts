@@ -367,6 +367,16 @@ async function shouldSendImportantDateReminder(
     }
 
     // Never sent before - check if we should send based on event date
+    // For unknown-year dates (year <= 1604), normalize to current year to avoid
+    // DST drift over centuries breaking the interval math
+    if (eventDateNormalized.getFullYear() <= 1604) {
+      const currentYear = today.getFullYear();
+      eventDateNormalized.setFullYear(currentYear);
+      // If the normalized date is in the future, use previous year
+      if (eventDateNormalized.getTime() > today.getTime()) {
+        eventDateNormalized.setFullYear(currentYear - 1);
+      }
+    }
     const timeSinceEvent = today.getTime() - eventDateNormalized.getTime();
 
     // Calculate which occurrence this is

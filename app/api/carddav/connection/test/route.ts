@@ -60,12 +60,17 @@ export const POST = withLogging(async function POST(request: Request) {
         defaultAccountType: 'carddav',
       });
 
-      // Try to fetch address books to verify connection
-      await client.fetchAddressBooks();
+      // Fetch address books to verify connection AND return the list
+      const addressBooks = await client.fetchAddressBooks();
 
       return NextResponse.json({
         success: true,
         message: 'Connection successful',
+        addressBooks: addressBooks.map((ab) => ({
+          url: /^https?:\/\//i.test(ab.url) ? ab.url : new URL(ab.url, serverUrl).href,
+          displayName: typeof ab.displayName === 'string' ? ab.displayName : null,
+          description: ab.description || null,
+        })),
       });
     } catch (error) {
       log.error({ err: error instanceof Error ? error : new Error(String(error)) }, 'CardDAV connection test failed');

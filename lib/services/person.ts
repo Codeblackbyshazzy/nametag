@@ -537,7 +537,7 @@ export async function mergePeople(
   }
 
   // Build scalar updates from overrides + auto-transfer empty fields
-  const scalarUpdates: Record<string, unknown> = {};
+  const scalarUpdates: Prisma.PersonUpdateInput = {};
 
   if (overrides) {
     for (const field of SCALAR_STRING_FIELDS) {

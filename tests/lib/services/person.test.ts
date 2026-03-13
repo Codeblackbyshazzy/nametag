@@ -820,7 +820,7 @@ describe('mergePeople', () => {
     const call = mocks.mockTxClient.person.update.mock.calls.find(
       (c: [{ where: { id: string } }]) => c[0].where.id === PERSON_ID
     );
-    expect(call).toBeDefined();
+    if (!call) throw new Error('Expected update call for target person');
     expect(call[0].data.name).toBe('Alice Override');
     expect(call[0].data.surname).toBe('Smith');
   });
@@ -836,7 +836,7 @@ describe('mergePeople', () => {
     const call = mocks.mockTxClient.person.update.mock.calls.find(
       (c: [{ where: { id: string } }]) => c[0].where.id === PERSON_ID
     );
-    expect(call).toBeDefined();
+    if (!call) throw new Error('Expected update call for target person');
     expect(call[0].data.surname).toBe('Smith');
   });
 

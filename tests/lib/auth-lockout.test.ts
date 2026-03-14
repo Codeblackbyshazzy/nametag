@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   isFeatureEnabled: vi.fn(() => false),
   normalizeEmail: vi.fn((email: string) => email.toLowerCase()),
+  sendEmail: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -30,6 +31,10 @@ vi.mock('@/lib/features', () => ({
 
 vi.mock('@/lib/api-utils', () => ({
   normalizeEmail: mocks.normalizeEmail,
+}));
+
+vi.mock('@/lib/email', () => ({
+  sendEmail: mocks.sendEmail,
 }));
 
 import { authorizeCredentials, MAX_FAILED_ATTEMPTS, LOCKOUT_DURATION_MS } from '@/lib/auth';
@@ -160,5 +165,35 @@ describe('authorizeCredentials - account lockout', () => {
   it('exports correct constants', () => {
     expect(MAX_FAILED_ATTEMPTS).toBe(10);
     expect(LOCKOUT_DURATION_MS).toBe(30 * 60 * 1000);
+  });
+
+  it('sends lockout email notification on the 10th failed attempt', async () => {
+    mocks.findUnique.mockResolvedValue({ ...baseUser, failedLoginAttempts: 9 });
+    mocks.bcryptCompare.mockResolvedValue(false);
+
+    await authorizeCredentials({ email: 'test@example.com', password: 'wrong' });
+
+    // Allow the non-blocking promise chain to resolve
+    await vi.waitFor(() => {
+      expect(mocks.sendEmail).toHaveBeenCalledTimes(1);
+    });
+
+    expect(mocks.sendEmail).toHaveBeenCalledWith({
+      to: 'test@example.com',
+      subject: 'Account temporarily locked',
+      text: expect.stringContaining('temporarily locked'),
+    });
+  });
+
+  it('does not send lockout email before reaching threshold', async () => {
+    mocks.findUnique.mockResolvedValue({ ...baseUser, failedLoginAttempts: 7 });
+    mocks.bcryptCompare.mockResolvedValue(false);
+
+    await authorizeCredentials({ email: 'test@example.com', password: 'wrong' });
+
+    // Give a tick for any potential async to resolve
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 });

@@ -59,6 +59,17 @@ export async function authorizeCredentials(credentials: {
 
     if (newAttempts >= MAX_FAILED_ATTEMPTS) {
       updateData.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+
+      // Send lockout notification email (non-blocking)
+      const locale = user.language || 'en';
+      import(`@/locales/${locale}.json`).then((messages) => {
+        const lockoutMessages = messages.auth?.accountLocked;
+        const subject = lockoutMessages?.subject || 'Account temporarily locked';
+        const text = lockoutMessages?.body || 'Your account has been temporarily locked due to too many failed login attempts. It will be automatically unlocked in 30 minutes. If you did not attempt to log in, please reset your password immediately.';
+        return import('@/lib/email').then(({ sendEmail }) =>
+          sendEmail({ to: user.email, subject, text })
+        );
+      }).catch(() => {});
     }
 
     await prisma.user.update({

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getTranslations } from 'next-intl/server';
 import Navigation from '@/components/Navigation';
 import JournalTimeline from '@/components/JournalTimeline';
+import JournalFilters from '@/components/JournalFilters';
 
 export default async function JournalPage({
   searchParams,
@@ -113,35 +114,11 @@ export default async function JournalPage({
             </Link>
           </div>
 
-          <div className="flex gap-3 mb-6">
-            <form action="/journal" method="get" className="flex-1">
-              {personFilter && <input type="hidden" name="person" value={personFilter} />}
-              <input
-                type="search"
-                name="q"
-                defaultValue={searchQuery ?? ''}
-                placeholder={t('searchPlaceholder')}
-                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-              />
-            </form>
-            <form action="/journal" method="get">
-              {searchQuery && <input type="hidden" name="q" value={searchQuery} />}
-              <select
-                name="person"
-                defaultValue={personFilter ?? ''}
-                onChange={(e) => (e.target.closest('form') as HTMLFormElement)?.submit()}
-                className="px-3 py-2 bg-surface border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-              >
-                <option value="">{t('allPeople')}</option>
-                {people.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.nickname ?? person.name}
-                    {person.surname ? ` ${person.surname}` : ''}
-                  </option>
-                ))}
-              </select>
-            </form>
-          </div>
+          <JournalFilters
+            people={people}
+            currentPerson={personFilter}
+            currentSearch={searchQuery}
+          />
 
           <JournalTimeline
             entries={serializedEntries}

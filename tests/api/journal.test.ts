@@ -4,6 +4,9 @@ const mocks = vi.hoisted(() => ({
   journalEntryFindMany: vi.fn(),
   journalEntryCreate: vi.fn(),
   journalEntryCount: vi.fn(),
+  journalEntryFindUnique: vi.fn(),
+  journalEntryUpdate: vi.fn(),
+  journalEntryPersonDeleteMany: vi.fn(),
   personUpdateMany: vi.fn(),
   personFindMany: vi.fn(),
 }));
@@ -14,6 +17,11 @@ vi.mock('../../lib/prisma', () => ({
       findMany: mocks.journalEntryFindMany,
       create: mocks.journalEntryCreate,
       count: mocks.journalEntryCount,
+      findUnique: mocks.journalEntryFindUnique,
+      update: mocks.journalEntryUpdate,
+    },
+    journalEntryPerson: {
+      deleteMany: mocks.journalEntryPersonDeleteMany,
     },
     person: {
       updateMany: mocks.personUpdateMany,
@@ -37,6 +45,7 @@ vi.mock('../../lib/billing', () => ({
 }));
 
 import { GET, POST } from '../../app/api/journal/route';
+import { GET as GET_DETAIL, PUT, DELETE } from '../../app/api/journal/[id]/route';
 
 describe('Journal API', () => {
   beforeEach(() => {
@@ -141,6 +150,66 @@ describe('Journal API', () => {
       const response = await POST(request);
 
       expect(response.status).toBe(400);
+    });
+  });
+});
+
+describe('Journal Detail API', () => {
+  const mockContext = { params: Promise.resolve({ id: 'entry-1' }) };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('GET /api/journal/[id]', () => {
+    it('should return a journal entry by id', async () => {
+      const mockEntry = {
+        id: 'entry-1',
+        userId: 'user-123',
+        title: 'Coffee with Tom',
+        date: new Date('2026-03-28'),
+        body: 'Had coffee.',
+        people: [],
+      };
+      mocks.journalEntryFindUnique.mockResolvedValue(mockEntry);
+
+      const request = new Request('http://localhost/api/journal/entry-1');
+      const response = await GET_DETAIL(request, mockContext);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.entry.title).toBe('Coffee with Tom');
+    });
+
+    it('should return 404 for non-existent entry', async () => {
+      mocks.journalEntryFindUnique.mockResolvedValue(null);
+
+      const request = new Request('http://localhost/api/journal/nonexistent');
+      const response = await GET_DETAIL(request, mockContext);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('DELETE /api/journal/[id]', () => {
+    it('should soft-delete a journal entry', async () => {
+      mocks.journalEntryFindUnique.mockResolvedValue({
+        id: 'entry-1',
+        userId: 'user-123',
+      });
+      mocks.journalEntryUpdate.mockResolvedValue({});
+
+      const request = new Request('http://localhost/api/journal/entry-1', {
+        method: 'DELETE',
+      });
+      const response = await DELETE(request, mockContext);
+
+      expect(response.status).toBe(200);
+      expect(mocks.journalEntryUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ deletedAt: expect.any(Date) }),
+        })
+      );
     });
   });
 });

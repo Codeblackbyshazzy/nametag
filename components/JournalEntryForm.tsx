@@ -113,14 +113,14 @@ export default function JournalEntryForm({
         body: JSON.stringify(payload),
       });
 
-      const data = (await response.json()) as { id?: string; error?: string };
+      const data = (await response.json()) as { entry?: { id: string }; error?: string };
 
       if (!response.ok) {
         setError(data.error ?? t('save'));
         return;
       }
 
-      const newId = data.id ?? entryId;
+      const newId = data.entry?.id ?? entryId;
       router.push(`/journal/${newId}`);
       router.refresh();
     } catch {

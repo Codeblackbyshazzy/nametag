@@ -301,6 +301,11 @@ export async function syncFromServer(
               },
             });
 
+            log.warn(
+              { event: 'carddav.conflict.created', personId: fullMapping.personId, mappingId: mapping.id },
+              'CardDAV conflict created',
+            );
+
             result.conflicts++;
             continue;
           } else if (remoteChanged) {
@@ -620,7 +625,14 @@ export async function syncToServer(
           },
         });
       } catch (error) {
-        log.error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error pushing vCard');
+        log.warn(
+          {
+            event: 'carddav.push.failed',
+            personId: mapping.personId,
+            err: error instanceof Error ? error : new Error(String(error)),
+          },
+          'CardDAV push failed',
+        );
         result.errors++;
         result.errorMessages.push(
           error instanceof Error ? error.message : 'Unknown error'
@@ -726,7 +738,14 @@ export async function syncToServer(
 
         result.exported++;
       } catch (error) {
-        log.error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error exporting unmapped contact');
+        log.warn(
+          {
+            event: 'carddav.push.failed',
+            personId: person.id,
+            err: error instanceof Error ? error : new Error(String(error)),
+          },
+          'CardDAV push failed (unmapped)',
+        );
         result.errors++;
         result.errorMessages.push(
           `Failed to export ${person.name}: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -792,6 +811,7 @@ export async function bidirectionalSync(
     };
   }
 
+  const syncStart = Date.now();
   let timedOut = false;
   let timerId: ReturnType<typeof setTimeout> | undefined;
 
@@ -800,7 +820,7 @@ export async function bidirectionalSync(
       const pullResult = await syncFromServer(userId, onProgress);
       const pushResult = await syncToServer(userId, onProgress);
 
-      return {
+      const summary = {
         imported: pullResult.imported,
         exported: pushResult.exported,
         updatedLocally: pullResult.updatedLocally + pushResult.updatedLocally,
@@ -813,6 +833,21 @@ export async function bidirectionalSync(
         ],
         pendingImports: (pullResult.pendingImports || 0) + (pushResult.pendingImports || 0),
       };
+      log.info(
+        {
+          event: 'carddav.sync.finished',
+          imported: summary.imported,
+          exported: summary.exported,
+          updatedLocally: summary.updatedLocally,
+          updatedRemotely: summary.updatedRemotely,
+          conflicts: summary.conflicts,
+          errors: summary.errors,
+          pendingImports: summary.pendingImports,
+          durationMs: Date.now() - syncStart,
+        },
+        'CardDAV sync finished',
+      );
+      return summary;
     };
 
     return await Promise.race([

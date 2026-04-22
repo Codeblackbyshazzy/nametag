@@ -6,6 +6,7 @@ import { readPhotoForExport, isPhotoFilename } from '@/lib/photo-storage';
 import { withRetry } from './retry';
 import { buildLocalHash } from './hash';
 import { createModuleLogger } from '@/lib/logger';
+import { updateContext } from '@/lib/logging/context';
 
 const log = createModuleLogger('carddav');
 import { v4 as uuidv4 } from 'uuid';
@@ -99,6 +100,7 @@ export async function autoExportPerson(personId: string): Promise<void> {
   }
 
   try {
+    updateContext({ personId: person.id });
     // Create CardDAV client
     const client = await createCardDavClient(connection);
 
@@ -206,7 +208,14 @@ export async function autoExportPerson(personId: string): Promise<void> {
 
     log.info({ personId: person.id }, 'Auto-exported person to CardDAV');
   } catch (error) {
-    log.error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Auto-export failed');
+    log.error(
+      {
+        event: 'carddav.autoExport.failed',
+        personId: person.id,
+        err: error instanceof Error ? error : new Error(String(error)),
+      },
+      'CardDAV auto-export failed',
+    );
 
     // Update connection with error
     await prisma.cardDavConnection.update({
@@ -297,6 +306,7 @@ export async function autoUpdatePerson(personId: string): Promise<void> {
   }
 
   try {
+    updateContext({ personId: person.id });
     // Create CardDAV client
     const client = await createCardDavClient(connection);
 
@@ -334,7 +344,14 @@ export async function autoUpdatePerson(personId: string): Promise<void> {
 
     log.info({ personId: person.id }, 'Auto-updated person on CardDAV');
   } catch (error) {
-    log.error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Auto-update failed');
+    log.error(
+      {
+        event: 'carddav.autoUpdate.failed',
+        personId: person.id,
+        err: error instanceof Error ? error : new Error(String(error)),
+      },
+      'CardDAV auto-update failed',
+    );
 
     // Update connection with error
     await prisma.cardDavConnection.update({

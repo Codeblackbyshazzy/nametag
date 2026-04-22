@@ -13,24 +13,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { buildLocalHash } from './hash';
 import { getAlreadyMappedPersonUids } from './mapped-uids';
 import { createModuleLogger } from '@/lib/logger';
+import { ExternalServiceError } from '@/lib/errors';
+import { updateContext } from '@/lib/logging/context';
 
 const log = createModuleLogger('carddav');
 
 /** Preserved vCard properties stored on CardDavMapping for round-tripping. */
 export type PreservedProperties = UnknownProperty[];
-
-/**
- * Check whether an error represents an HTTP 412 Precondition Failed response.
- * Checks for a numeric `status` property first (structured errors), then
- * falls back to matching the "412" status code in the error message (tsdav
- * wraps HTTP failures as plain Error objects with the status in the message).
- */
-export function is412Error(error: unknown): boolean {
-  if (typeof error === 'object' && error !== null && 'status' in error) {
-    return (error as { status: number }).status === 412;
-  }
-  return error instanceof Error && /\b412\b/.test(error.message);
-}
 
 /**
  * Handle a 412 Precondition Failed on vCard CREATE by adopting the existing
@@ -312,6 +301,11 @@ export async function syncFromServer(
               },
             });
 
+            log.warn(
+              { event: 'carddav.conflict.created', personId: fullMapping.personId, mappingId: mapping.id },
+              'CardDAV conflict created',
+            );
+
             result.conflicts++;
             continue;
           } else if (remoteChanged) {
@@ -521,6 +515,8 @@ export async function syncToServer(
             : mapping.person.surname || 'Unknown',
         });
 
+        updateContext({ personId: mapping.personId });
+
         // Clean up legacy "Unknown vCard Properties" from notes (issue #130)
         if (mapping.person.notes?.includes('--- Unknown vCard Properties ---')) {
           const cleanedNotes = mapping.person.notes
@@ -571,7 +567,7 @@ export async function syncToServer(
               { maxAttempts: 3 }
             );
           } catch (updateError) {
-            if (!is412Error(updateError)) throw updateError;
+            if (!(updateError instanceof ExternalServiceError && updateError.status === 412)) throw updateError;
 
             // 412: fetch fresh ETag from server and retry once
             log.warn({ personId: mapping.personId, href: mapping.href }, '412 Precondition Failed — refreshing ETag and retrying');
@@ -605,7 +601,7 @@ export async function syncToServer(
               { maxAttempts: 3 }
             );
           } catch (createError) {
-            if (!is412Error(createError)) throw createError;
+            if (!(createError instanceof ExternalServiceError && createError.status === 412)) throw createError;
             created = await createOrAdoptVCard(client, addressBook, vCardData, filename, mapping.personId);
           }
 
@@ -630,7 +626,14 @@ export async function syncToServer(
           },
         });
       } catch (error) {
-        log.error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error pushing vCard');
+        log.warn(
+          {
+            event: 'carddav.push.failed',
+            personId: mapping.personId,
+            err: error instanceof Error ? error : new Error(String(error)),
+          },
+          'CardDAV push failed',
+        );
         result.errors++;
         result.errorMessages.push(
           error instanceof Error ? error.message : 'Unknown error'
@@ -711,12 +714,13 @@ export async function syncToServer(
         // was imported from server but not yet mapped) — adopt it and update instead.
         let created: VCard;
         try {
+          updateContext({ personId: person.id });
           created = await withRetry(
             () => client.createVCard(addressBook, vCardData, filename),
             { maxAttempts: 3 }
           );
         } catch (createError) {
-          if (!is412Error(createError)) throw createError;
+          if (!(createError instanceof ExternalServiceError && createError.status === 412)) throw createError;
           created = await createOrAdoptVCard(client, addressBook, vCardData, filename, person.id);
         }
 
@@ -735,7 +739,14 @@ export async function syncToServer(
 
         result.exported++;
       } catch (error) {
-        log.error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error exporting unmapped contact');
+        log.warn(
+          {
+            event: 'carddav.push.failed',
+            personId: person.id,
+            err: error instanceof Error ? error : new Error(String(error)),
+          },
+          'CardDAV push failed (unmapped)',
+        );
         result.errors++;
         result.errorMessages.push(
           `Failed to export ${person.name}: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -801,6 +812,7 @@ export async function bidirectionalSync(
     };
   }
 
+  const syncStart = Date.now();
   let timedOut = false;
   let timerId: ReturnType<typeof setTimeout> | undefined;
 
@@ -809,7 +821,7 @@ export async function bidirectionalSync(
       const pullResult = await syncFromServer(userId, onProgress);
       const pushResult = await syncToServer(userId, onProgress);
 
-      return {
+      const summary = {
         imported: pullResult.imported,
         exported: pushResult.exported,
         updatedLocally: pullResult.updatedLocally + pushResult.updatedLocally,
@@ -822,6 +834,21 @@ export async function bidirectionalSync(
         ],
         pendingImports: (pullResult.pendingImports || 0) + (pushResult.pendingImports || 0),
       };
+      log.info(
+        {
+          event: 'carddav.sync.finished',
+          imported: summary.imported,
+          exported: summary.exported,
+          updatedLocally: summary.updatedLocally,
+          updatedRemotely: summary.updatedRemotely,
+          conflicts: summary.conflicts,
+          errors: summary.errors,
+          pendingImports: summary.pendingImports,
+          durationMs: Date.now() - syncStart,
+        },
+        'CardDAV sync finished',
+      );
+      return summary;
     };
 
     return await Promise.race([

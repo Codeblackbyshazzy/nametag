@@ -103,4 +103,19 @@ describe('auth domain events', () => {
     expect(evt).toBeDefined();
     expect(evt).toMatchObject({ reason: 'unknown_user' });
   });
+
+  it('emits auth.login.failed with reason:oauth_only when user has no password', async () => {
+    mocks.findUniqueUser.mockResolvedValue({
+      id: 'u-1', email: 'a@b.com', password: null,
+      name: 'A', failedLoginAttempts: 0, lockedUntil: null, emailVerified: new Date(),
+      language: 'en',
+    });
+
+    const result = await authorizeCredentials({ email: 'a@b.com', password: 'anything' });
+    expect(result).toBeNull();
+
+    const evt = lines.find((l) => l.event === 'auth.login.failed');
+    expect(evt).toBeDefined();
+    expect(evt).toMatchObject({ reason: 'oauth_only', email: 'a@b.com', userId: 'u-1' });
+  });
 });

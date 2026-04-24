@@ -198,6 +198,7 @@ export default function UnifiedNetworkGraph({
     const collisionRadius = clusteringEnabled ? (isMobile ? 40 : 50) : (isMobile ? 25 : 30);
 
     const sim = forceSimulation<SimulationNode>(nodes)
+      .velocityDecay(0.6)
       .force('link', forceLink<SimulationNode, SimulationEdge>(edges)
         .id((d) => d.id)
         .distance(mobileLinkDistance))
@@ -347,7 +348,7 @@ export default function UnifiedNetworkGraph({
       .on('start', (event) => {
         const d = event.subject as SimulationNode | null;
         if (!d) return;
-        if (!event.active && simRef.current) simRef.current.alphaTarget(0.3).restart();
+        if (!event.active && simRef.current) simRef.current.alphaTarget(0.1).restart();
         d.fx = d.x;
         d.fy = d.y;
       })

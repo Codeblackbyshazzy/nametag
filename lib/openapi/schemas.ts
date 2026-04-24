@@ -277,6 +277,14 @@ export function sharedSchemas(): Record<string, unknown> {
         theme: { type: 'string', enum: ['LIGHT', 'DARK'] },
         dateFormat: { type: 'string', enum: ['MDY', 'DMY', 'YMD'] },
         language: { type: 'string', description: 'Locale code (e.g. en, es-ES, ja-JP, nb-NO, de-DE)' },
+        graphMode: {
+          oneOf: [
+            { type: 'string', enum: ['individuals', 'bubbles'] },
+            { type: 'null' },
+          ],
+          description: 'Null means auto-resolve from node count vs. threshold',
+        },
+        graphBubbleThreshold: { type: 'integer', minimum: 10, maximum: 500 },
         emailVerified: { type: 'boolean' },
         createdAt: { type: 'string', format: 'date-time' },
         updatedAt: { type: 'string', format: 'date-time' },

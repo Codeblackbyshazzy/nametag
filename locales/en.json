@@ -119,6 +119,16 @@
       "nameDisplayFormatShortDescription": "Show only nickname or first name",
       "nameDisplayFormatSuccess": "Name display format updated successfully",
       "nameDisplayFormatError": "Failed to update name display format",
+      "graphModeTitle": "Network graph display",
+      "graphModeDescription": "How to display your network graph on the dashboard.",
+      "graphModeAuto": "Auto",
+      "graphModeIndividuals": "Always show individuals",
+      "graphModeBubbles": "Always show groups",
+      "graphThresholdLabel": "Collapse groups when network exceeds",
+      "graphThresholdSuffix": "people",
+      "graphThresholdDescription": "Only used in Auto mode. Range: 10–500.",
+      "graphDisplaySuccess": "Graph display updated",
+      "graphDisplayError": "Failed to update graph display",
       "language": {
         "title": "Language",
         "description": "Choose your preferred language",
@@ -667,7 +677,10 @@
         "example": "Friends",
         "pillTip": "Click a group name to include or exclude it.",
         "modeTip": "Mode: match one or all selected groups."
-      }
+      },
+      "showAsGroups": "Show as groups",
+      "showIndividuals": "Show individuals",
+      "unsortedBubbleLabel": "Unsorted"
     }
   },
   "people": {

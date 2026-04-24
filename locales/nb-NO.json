@@ -119,6 +119,16 @@
       "nameDisplayFormatShortDescription": "Vis kun kallenavn eller fornavn",
       "nameDisplayFormatSuccess": "Navnevisningsformat oppdatert",
       "nameDisplayFormatError": "Kunne ikke oppdatere navnevisningsformat",
+      "graphModeTitle": "Visning av nettverksgraf",
+      "graphModeDescription": "Hvordan nettverksgrafen vises i dashbordet.",
+      "graphModeAuto": "Automatisk",
+      "graphModeIndividuals": "Vis alltid enkeltvis",
+      "graphModeBubbles": "Vis alltid som grupper",
+      "graphThresholdLabel": "Samle grupper når nettverket overstiger",
+      "graphThresholdSuffix": "personer",
+      "graphThresholdDescription": "Brukes bare i automatisk modus. Område: 10–500.",
+      "graphDisplaySuccess": "Visning oppdatert",
+      "graphDisplayError": "Kunne ikke oppdatere visningen",
       "language": {
         "title": "Språk",
         "description": "Velg språket ditt",
@@ -667,7 +677,10 @@
         "example": "Venner",
         "pillTip": "Klikk på et gruppenavn for å inkludere eller ekskludere det.",
         "modeTip": "Modus: match én eller alle inkluderte grupper."
-      }
+      },
+      "showAsGroups": "Vis som grupper",
+      "showIndividuals": "Vis enkeltvis",
+      "unsortedBubbleLabel": "Uten gruppe"
     }
   },
   "people": {

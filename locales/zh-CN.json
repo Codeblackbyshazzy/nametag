@@ -119,6 +119,16 @@
       "nameDisplayFormatShortDescription": "仅显示昵称或名字",
       "nameDisplayFormatSuccess": "姓名显示格式已更新",
       "nameDisplayFormatError": "更新姓名显示格式失败",
+      "graphModeTitle": "网络图显示",
+      "graphModeDescription": "如何在仪表盘中显示你的人脉网络图。",
+      "graphModeAuto": "自动",
+      "graphModeIndividuals": "始终单独显示",
+      "graphModeBubbles": "始终按组显示",
+      "graphThresholdLabel": "网络超出以下人数时合并为组",
+      "graphThresholdSuffix": "人",
+      "graphThresholdDescription": "仅用于自动模式。范围：10–500。",
+      "graphDisplaySuccess": "显示已更新",
+      "graphDisplayError": "无法更新显示",
       "language": {
         "title": "语言",
         "description": "选择您偏好的语言",
@@ -667,7 +677,10 @@
         "example": "朋友",
         "pillTip": "点击分组名称即可将其包含或排除。",
         "modeTip": "模式：匹配一个或所有已包含的分组。"
-      }
+      },
+      "showAsGroups": "按组显示",
+      "showIndividuals": "单独显示",
+      "unsortedBubbleLabel": "未分组"
     }
   },
   "people": {

@@ -119,6 +119,16 @@
       "nameDisplayFormatShortDescription": "Mostrar solo apodo o primer nombre",
       "nameDisplayFormatSuccess": "Formato de nombre actualizado correctamente",
       "nameDisplayFormatError": "Error al actualizar el formato de nombre",
+      "graphModeTitle": "Visualización del grafo",
+      "graphModeDescription": "Cómo mostrar tu grafo de red en el panel.",
+      "graphModeAuto": "Automático",
+      "graphModeIndividuals": "Mostrar siempre personas",
+      "graphModeBubbles": "Mostrar siempre grupos",
+      "graphThresholdLabel": "Agrupar cuando la red supere",
+      "graphThresholdSuffix": "personas",
+      "graphThresholdDescription": "Solo se usa en modo automático. Rango: 10–500.",
+      "graphDisplaySuccess": "Visualización actualizada",
+      "graphDisplayError": "No se pudo actualizar la visualización",
       "language": {
         "title": "Idioma",
         "description": "Elige tu idioma",
@@ -667,7 +677,10 @@
         "example": "Amigos",
         "pillTip": "Haz clic en el nombre de un grupo para incluirlo o excluirlo.",
         "modeTip": "Modo: coincidir con uno o todos los grupos incluidos."
-      }
+      },
+      "showAsGroups": "Mostrar como grupos",
+      "showIndividuals": "Mostrar personas",
+      "unsortedBubbleLabel": "Sin grupo"
     }
   },
   "people": {

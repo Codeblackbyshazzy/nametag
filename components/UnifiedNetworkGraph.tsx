@@ -522,9 +522,10 @@ export default function UnifiedNetworkGraph({
 
     const handleNodeActivate = (node: SimulationNode) => {
       if (node.kind === 'bubble') {
-        // On collapsed→expanded transition, push the bubble outward so the
-        // about-to-form cluster has clear space and doesn't tangle with
-        // nodes already living near the center.
+        // On collapsed→expanded transition, push the bubble outward and pin
+        // it briefly. While pinned, the cluster field force pushes other
+        // nodes out of the way; after we release the pin, the sim resettles
+        // with everything in clean position.
         if (!node.isExpanded && node.x !== undefined && node.y !== undefined) {
           const center = nodesRef.current.find(
             (n): n is SimulationNode & { x: number; y: number } =>
@@ -538,13 +539,27 @@ export default function UnifiedNetworkGraph({
             const padding = isMobile ? 18 : 24;
             const clusterRadius = Math.sqrt(Math.max(node.memberCount, 1)) * memberRadius * 1.2 + padding;
             const targetDist = clusterRadius + (isMobile ? 60 : 90);
-            if (dist < targetDist) {
-              const ratio = targetDist / dist;
-              node.x = center.x + dx * ratio;
-              node.y = center.y + dy * ratio;
-              node.vx = 0;
-              node.vy = 0;
-            }
+            const finalDist = Math.max(dist, targetDist);
+            const ratio = finalDist / dist;
+            const targetX = center.x + dx * ratio;
+            const targetY = center.y + dy * ratio;
+
+            node.x = targetX;
+            node.y = targetY;
+            node.fx = targetX;
+            node.fy = targetY;
+            node.vx = 0;
+            node.vy = 0;
+
+            const bubbleId = node.id;
+            window.setTimeout(() => {
+              const ghost = nodesRef.current.find((n) => n.id === bubbleId);
+              if (ghost) {
+                ghost.fx = null;
+                ghost.fy = null;
+                if (simRef.current) simRef.current.alpha(0.2).restart();
+              }
+            }, 500);
           }
         }
         setExpandedBubbles((prev) => {

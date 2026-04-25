@@ -522,6 +522,31 @@ export default function UnifiedNetworkGraph({
 
     const handleNodeActivate = (node: SimulationNode) => {
       if (node.kind === 'bubble') {
+        // On collapsed→expanded transition, push the bubble outward so the
+        // about-to-form cluster has clear space and doesn't tangle with
+        // nodes already living near the center.
+        if (!node.isExpanded && node.x !== undefined && node.y !== undefined) {
+          const center = nodesRef.current.find(
+            (n): n is SimulationNode & { x: number; y: number } =>
+              n.kind === 'person' && n.isCenter && n.x !== undefined && n.y !== undefined,
+          );
+          if (center) {
+            const dx = node.x - center.x;
+            const dy = node.y - center.y;
+            const dist = Math.hypot(dx, dy) || 1;
+            const memberRadius = isMobile ? 12 : 14;
+            const padding = isMobile ? 18 : 24;
+            const clusterRadius = Math.sqrt(Math.max(node.memberCount, 1)) * memberRadius * 1.2 + padding;
+            const targetDist = clusterRadius + (isMobile ? 60 : 90);
+            if (dist < targetDist) {
+              const ratio = targetDist / dist;
+              node.x = center.x + dx * ratio;
+              node.y = center.y + dy * ratio;
+              node.vx = 0;
+              node.vy = 0;
+            }
+          }
+        }
         setExpandedBubbles((prev) => {
           const next = new Set(prev);
           if (next.has(node.groupId)) next.delete(node.groupId);

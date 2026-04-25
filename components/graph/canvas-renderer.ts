@@ -12,7 +12,13 @@ export interface RenderContext {
   isMobile: boolean;
   hoveredNodeId: string | null;
   getPhoto: (id: string) => PhotoCacheEntry | undefined;
-  formatEdgeLabel?: (edge: SimulationEdge) => string;
+  formatEdgeLabel?: (edge: SimulationEdge) => EdgeLabelParts;
+}
+
+export interface EdgeLabelParts {
+  before: string;
+  emphasis: string;
+  after: string;
 }
 
 const NODE_RADIUS = {
@@ -229,8 +235,10 @@ export function paintFrame(
   // Edge labels for highlighted edges
   if (rc.hoveredNodeId && rc.formatEdgeLabel && rc.lod !== 'dots') {
     const fontSize = rc.isMobile ? 10 : 11;
-    rc.ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
-    rc.ctx.textAlign = 'center';
+    const fontFamily = 'system-ui, -apple-system, sans-serif';
+    const normalFont = `${fontSize}px ${fontFamily}`;
+    const boldFont = `700 ${fontSize}px ${fontFamily}`;
+    rc.ctx.textAlign = 'left';
     rc.ctx.textBaseline = 'middle';
     for (const e of edges) {
       const srcId = typeof e.source === 'string' ? e.source : e.source.id;
@@ -240,17 +248,31 @@ export function paintFrame(
       if (src.x === undefined || tgt.x === undefined) continue;
       const mx = ((src.x ?? 0) + (tgt.x ?? 0)) / 2;
       const my = ((src.y ?? 0) + (tgt.y ?? 0)) / 2;
-      const label = rc.formatEdgeLabel(e);
-      // Background pill for legibility
+      const parts = rc.formatEdgeLabel(e);
+
+      rc.ctx.font = normalFont;
+      const wBefore = rc.ctx.measureText(parts.before).width;
+      const wAfter = rc.ctx.measureText(parts.after).width;
+      rc.ctx.font = boldFont;
+      const wEmph = rc.ctx.measureText(parts.emphasis).width;
+      const totalW = wBefore + wEmph + wAfter;
+
       const padX = 6;
       const padY = 2;
-      const metrics = rc.ctx.measureText(label);
-      const w = metrics.width + padX * 2;
+      const w = totalW + padX * 2;
       const h = fontSize + padY * 2;
-      rc.ctx.fillStyle = rc.isDark ? 'rgba(17,24,39,0.85)' : 'rgba(255,255,255,0.9)';
+      rc.ctx.fillStyle = rc.isDark ? 'rgba(17,24,39,0.55)' : 'rgba(255,255,255,0.65)';
       rc.ctx.fillRect(mx - w / 2, my - h / 2, w, h);
-      rc.ctx.fillStyle = e.color || (rc.isDark ? '#f3f4f6' : '#111827');
-      rc.ctx.fillText(label, mx, my);
+
+      const baseX = mx - totalW / 2;
+      const textColor = e.color || (rc.isDark ? '#f3f4f6' : '#111827');
+      rc.ctx.fillStyle = textColor;
+      rc.ctx.font = normalFont;
+      rc.ctx.fillText(parts.before, baseX, my);
+      rc.ctx.font = boldFont;
+      rc.ctx.fillText(parts.emphasis, baseX + wBefore, my);
+      rc.ctx.font = normalFont;
+      rc.ctx.fillText(parts.after, baseX + wBefore + wEmph, my);
     }
   }
 

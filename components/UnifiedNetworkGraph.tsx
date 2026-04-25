@@ -130,20 +130,28 @@ export default function UnifiedNetworkGraph({
     dirtyRef.current = true;
   }, []);
 
-  const formatEdgeLabel = useCallback((edge: SimulationEdge): string => {
+  const formatEdgeLabel = useCallback((edge: SimulationEdge) => {
     const youLabel = tPeople('you');
     const sourceName = edge.sourceLabel ?? '';
     const targetName = edge.targetLabel ?? '';
     const typeStr = capitalizeType
       ? edge.type.charAt(0).toUpperCase() + edge.type.slice(1)
       : edge.type.toLowerCase();
+    let full: string;
     if (sourceName === youLabel || sourceName === 'You') {
-      return tPeople('graphEdgeLabelFromYou', { type: typeStr });
+      full = tPeople('graphEdgeLabelFromYou', { type: typeStr });
+    } else if (targetName === youLabel || targetName === 'You') {
+      full = tPeople('graphEdgeLabelToYou', { type: typeStr });
+    } else {
+      full = tPeople('graphEdgeLabel', { type: typeStr });
     }
-    if (targetName === youLabel || targetName === 'You') {
-      return tPeople('graphEdgeLabelToYou', { type: typeStr });
-    }
-    return tPeople('graphEdgeLabel', { type: typeStr });
+    const idx = full.toLowerCase().indexOf(typeStr.toLowerCase());
+    if (idx < 0) return { before: full, emphasis: '', after: '' };
+    return {
+      before: full.substring(0, idx),
+      emphasis: full.substring(idx, idx + typeStr.length),
+      after: full.substring(idx + typeStr.length),
+    };
   }, [tPeople, capitalizeType]);
 
   // Step 1: Paint loop
@@ -229,7 +237,18 @@ export default function UnifiedNetworkGraph({
     const height = rect.height;
     const mobileLinkDistance = isMobile ? 80 : linkDistance;
     const mobileChargeStrength = isMobile ? -250 : chargeStrength;
-    const collisionRadius = clusteringEnabled ? (isMobile ? 40 : 50) : (isMobile ? 25 : 30);
+    const personCollisionR = clusteringEnabled ? (isMobile ? 40 : 50) : (isMobile ? 25 : 30);
+
+    // Visible-radius-aware collision so big bubbles don't overlap "you".
+    const collisionForNode = (d: SimulationNode): number => {
+      if (d.kind === 'bubble') {
+        if (d.isExpanded) return (isMobile ? 12 : 16) + 6;
+        const base = isMobile ? 14 : 18;
+        const r = Math.max(base, Math.min(isMobile ? 40 : 56, base * Math.sqrt(d.memberCount)));
+        return r + 8;
+      }
+      return personCollisionR;
+    };
 
     const sim = forceSimulation<SimulationNode>(nodes)
       .velocityDecay(0.6)
@@ -240,18 +259,15 @@ export default function UnifiedNetworkGraph({
         clusteringEnabled ? mobileChargeStrength * 1.5 : mobileChargeStrength,
       ))
       .force('center', forceCenter(width / 2, height / 2))
-      .force('centerX', forceX<SimulationNode>(width / 2).strength(0.15))
-      .force('centerY', forceY<SimulationNode>(height / 2).strength(0.15))
-      .force('collision', forceCollide().radius(collisionRadius));
-
-    // Pin the "you" node at the canvas center so the graph is always centered
-    // and the recenter button maps the user node back to the visual center.
-    for (const n of nodes) {
-      if (n.kind === 'person' && n.isCenter) {
-        n.fx = width / 2;
-        n.fy = height / 2;
-      }
-    }
+      // Stronger pull for "you" anchors it at canvas-center under normal forces,
+      // while still letting the user drag it around for fun.
+      .force('centerX', forceX<SimulationNode>(width / 2).strength((d) =>
+        d.kind === 'person' && d.isCenter ? 0.5 : 0.15
+      ))
+      .force('centerY', forceY<SimulationNode>(height / 2).strength((d) =>
+        d.kind === 'person' && d.isCenter ? 0.5 : 0.15
+      ))
+      .force('collision', forceCollide<SimulationNode>().radius(collisionForNode));
 
     if (clusteringEnabled) {
       const uniqueGroupIds = Array.from(new Set(nodes.flatMap((n) => n.kind === 'person' ? n.groups : []))).filter(Boolean);
@@ -317,6 +333,14 @@ export default function UnifiedNetworkGraph({
     if (nextExpanded.size !== expandedBubbles.size) {
       setExpandedBubbles(nextExpanded);
     }
+
+    console.debug('[graph] recompose', {
+      mode: resolvedMode,
+      peopleCount: incomingPeople.length,
+      expandedBefore: [...expandedBubbles],
+      nextExpanded: [...nextExpanded],
+      includeGroupIds,
+    });
 
     const incomingNodes = buildSimulationNodes({
       people: incomingPeople,
@@ -437,10 +461,12 @@ export default function UnifiedNetworkGraph({
 
     const handleNodeActivate = (node: SimulationNode) => {
       if (node.kind === 'bubble') {
+        console.debug('[graph] bubble toggle', { groupId: node.groupId, wasExpanded: node.isExpanded });
         setExpandedBubbles((prev) => {
           const next = new Set(prev);
           if (next.has(node.groupId)) next.delete(node.groupId);
           else next.add(node.groupId);
+          console.debug('[graph] expandedBubbles ->', [...next]);
           return next;
         });
         return;
@@ -466,14 +492,12 @@ export default function UnifiedNetworkGraph({
         dragStartX = event.x;
         dragStartY = event.y;
         if (!event.active && simRef.current) simRef.current.alphaTarget(0.1).restart();
-        if (d.kind === 'person' && d.isCenter) return;
         d.fx = d.x;
         d.fy = d.y;
       })
       .on('drag', (event) => {
         const d = event.subject as SimulationNode | null;
         if (!d) return;
-        if (d.kind === 'person' && d.isCenter) return;
         const [gx, gy] = toGraphCoords(event.sourceEvent.clientX, event.sourceEvent.clientY);
         d.fx = gx;
         d.fy = gy;
@@ -482,12 +506,13 @@ export default function UnifiedNetworkGraph({
         const d = event.subject as SimulationNode | null;
         if (!d) return;
         if (!event.active && simRef.current) simRef.current.alphaTarget(0);
-        if (!(d.kind === 'person' && d.isCenter)) {
-          d.fx = null;
-          d.fy = null;
-        }
+        d.fx = null;
+        d.fy = null;
         const traveled = Math.hypot(event.x - dragStartX, event.y - dragStartY);
-        if (traveled < CLICK_TRAVEL_PX) handleNodeActivate(d);
+        if (traveled < CLICK_TRAVEL_PX) {
+          console.debug('[graph] click', { kind: d.kind, id: d.id, traveled });
+          handleNodeActivate(d);
+        }
       });
 
     select(canvas).call(drag_);

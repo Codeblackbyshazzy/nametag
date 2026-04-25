@@ -31,11 +31,11 @@ const FONT_SIZE = {
   mobile:  { center: 12, normal: 10 },
 } as const;
 
+const BUBBLE_RADIUS = { desktop: 14, mobile: 12 } as const;
+
 function nodeRadius(node: SimulationNode, isMobile: boolean): number {
   if (node.kind === 'bubble') {
-    if (node.isExpanded) return isMobile ? 12 : 16;
-    const base = isMobile ? 14 : 18;
-    return Math.max(base, Math.min(isMobile ? 40 : 56, base * Math.sqrt(node.memberCount)));
+    return isMobile ? BUBBLE_RADIUS.mobile : BUBBLE_RADIUS.desktop;
   }
   const table = isMobile ? NODE_RADIUS.mobile : NODE_RADIUS.desktop;
   return node.isCenter ? table.center : table.normal;
@@ -157,47 +157,46 @@ function drawBubble(rc: RenderContext, node: SimulationNode): void {
   if (node.kind !== 'bubble') return;
   if (node.x === undefined || node.y === undefined) return;
   const r = nodeRadius(node, rc.isMobile);
+  const ringColor = getNodeStroke(node, rc.isDark);
+  const tintColor = node.color ?? (rc.isDark ? '#9ca3af' : '#6b7280');
 
-  if (node.isExpanded) {
-    // Ghost collapse target: faint halo + label. Clickable to re-collapse the group.
-    rc.ctx.beginPath();
-    rc.ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-    rc.ctx.fillStyle = getNodeFill(node, rc.isDark);
-    rc.ctx.globalAlpha = 0.25;
-    rc.ctx.fill();
-    rc.ctx.globalAlpha = 1;
-
-    if (rc.lod !== 'dots') {
-      const fontSize = nodeFontSize(node, rc.isMobile);
-      rc.ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
-      rc.ctx.fillStyle = rc.isDark ? '#f3f4f6' : '#111827';
-      rc.ctx.textAlign = 'center';
-      rc.ctx.textBaseline = 'top';
-      rc.ctx.fillText(node.label, node.x, node.y + r + 4);
-    }
-    return;
-  }
-
+  // Hollow ring with a faint group-color tint inside, count rendered in middle.
   rc.ctx.beginPath();
   rc.ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-  rc.ctx.fillStyle = getNodeFill(node, rc.isDark);
-  rc.ctx.globalAlpha = 0.75;
+  rc.ctx.fillStyle = tintColor;
+  rc.ctx.globalAlpha = node.isExpanded ? 0.06 : 0.15;
   rc.ctx.fill();
   rc.ctx.globalAlpha = 1;
 
-  if (rc.lod !== 'dots') {
-    rc.ctx.lineWidth = 2;
-    rc.ctx.strokeStyle = getNodeStroke(node, rc.isDark);
-    rc.ctx.stroke();
-  }
+  rc.ctx.beginPath();
+  rc.ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+  rc.ctx.lineWidth = 2.5;
+  rc.ctx.strokeStyle = ringColor;
+  rc.ctx.globalAlpha = node.isExpanded ? 0.4 : 1;
+  rc.ctx.stroke();
+  rc.ctx.globalAlpha = 1;
 
   if (rc.lod !== 'dots') {
-    const fontSize = nodeFontSize(node, rc.isMobile);
-    rc.ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
-    rc.ctx.fillStyle = rc.isDark ? '#ffffff' : '#111827';
+    // Count inscribed in the ring
+    const countFont = `600 ${rc.isMobile ? 9 : 10}px system-ui, -apple-system, sans-serif`;
+    rc.ctx.font = countFont;
+    rc.ctx.fillStyle = rc.isDark ? '#f3f4f6' : '#111827';
+    rc.ctx.globalAlpha = node.isExpanded ? 0.5 : 1;
     rc.ctx.textAlign = 'center';
     rc.ctx.textBaseline = 'middle';
-    rc.ctx.fillText(node.label, node.x, node.y);
+    rc.ctx.fillText(String(node.memberCount), node.x, node.y);
+    rc.ctx.globalAlpha = 1;
+
+    // Group name label below, like a person's name
+    const labelFont = `${rc.isMobile ? 11 : 12}px system-ui, -apple-system, sans-serif`;
+    rc.ctx.font = labelFont;
+    rc.ctx.fillStyle = rc.isDark ? '#f3f4f6' : '#111827';
+    rc.ctx.globalAlpha = node.isExpanded ? 0.5 : 1;
+    rc.ctx.textAlign = 'center';
+    rc.ctx.textBaseline = 'top';
+    const labelOnly = node.label.split(' · ')[0];
+    rc.ctx.fillText(labelOnly, node.x, node.y + r + (rc.isMobile ? 5 : 6));
+    rc.ctx.globalAlpha = 1;
   }
 }
 

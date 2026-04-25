@@ -239,14 +239,9 @@ export default function UnifiedNetworkGraph({
     const mobileChargeStrength = isMobile ? -250 : chargeStrength;
     const personCollisionR = clusteringEnabled ? (isMobile ? 40 : 50) : (isMobile ? 25 : 30);
 
-    // Visible-radius-aware collision so big bubbles don't overlap "you".
+    // Visible-radius-aware collision so bubbles don't overlap "you".
     const collisionForNode = (d: SimulationNode): number => {
-      if (d.kind === 'bubble') {
-        if (d.isExpanded) return (isMobile ? 12 : 16) + 6;
-        const base = isMobile ? 14 : 18;
-        const r = Math.max(base, Math.min(isMobile ? 40 : 56, base * Math.sqrt(d.memberCount)));
-        return r + 8;
-      }
+      if (d.kind === 'bubble') return (isMobile ? 12 : 14) + 6;
       return personCollisionR;
     };
 

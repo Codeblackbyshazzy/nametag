@@ -82,7 +82,6 @@ export default function UnifiedNetworkGraph({
   // Bubble state
   const [expandedBubbles, setExpandedBubbles] = useState<Set<string>>(new Set());
   const [localGraphMode, setLocalGraphMode] = useState<'individuals' | 'bubbles' | null>(graphModeProp);
-  const previousIncludeGroupIdsRef = useRef<Set<string>>(new Set());
   const rawCacheRef = useRef<{ nodes: RawGraphPerson[]; edges: SimulationEdge[] } | null>(null);
 
   // Ungrouped label for bubble composition
@@ -223,6 +222,8 @@ export default function UnifiedNetworkGraph({
         clusteringEnabled ? mobileChargeStrength * 1.5 : mobileChargeStrength,
       ))
       .force('center', forceCenter(width / 2, height / 2))
+      .force('centerX', forceX<SimulationNode>(width / 2).strength(0.06))
+      .force('centerY', forceY<SimulationNode>(height / 2).strength(0.06))
       .force('collision', forceCollide().radius(collisionRadius));
 
     if (clusteringEnabled) {
@@ -270,16 +271,13 @@ export default function UnifiedNetworkGraph({
         })
       : 'individuals';
 
-    // Auto-expand groups that were NEWLY added to the include filter since last fetch.
-    // (Don't re-add groups the user manually collapsed while still filtered.)
+    // Always expand any group that's currently in the include filter.
     const nextExpanded = new Set(expandedBubbles);
     if (resolvedMode === 'bubbles' && groups) {
-      const prev = previousIncludeGroupIdsRef.current;
       for (const id of includeGroupIds) {
-        if (!prev.has(id)) nextExpanded.add(id);
+        nextExpanded.add(id);
       }
     }
-    previousIncludeGroupIdsRef.current = new Set(includeGroupIds);
 
     // Drop expanded groups that no longer exist in the current data.
     if (resolvedMode === 'bubbles' && groups) {
@@ -410,11 +408,7 @@ export default function UnifiedNetworkGraph({
       }
     };
 
-    const onClick = (event: MouseEvent) => {
-      const node = nodeAt(event.clientX, event.clientY);
-      if (!node) return;
-
-      // Bubble click: toggle expansion
+    const handleNodeActivate = (node: SimulationNode) => {
       if (node.kind === 'bubble') {
         setExpandedBubbles((prev) => {
           const next = new Set(prev);
@@ -424,12 +418,14 @@ export default function UnifiedNetworkGraph({
         });
         return;
       }
-
-      if (node.kind !== 'person') return;
       if (centerNodeNonClickable && node.isCenter) return;
       if (node.id.startsWith('user-')) router.push('/dashboard');
       else router.push(`/people/${node.id}`);
     };
+
+    let dragStartX = 0;
+    let dragStartY = 0;
+    const CLICK_TRAVEL_PX = 4;
 
     const drag_ = drag<HTMLCanvasElement, unknown>()
       .container(canvas)
@@ -440,6 +436,8 @@ export default function UnifiedNetworkGraph({
       .on('start', (event) => {
         const d = event.subject as SimulationNode | null;
         if (!d) return;
+        dragStartX = event.x;
+        dragStartY = event.y;
         if (!event.active && simRef.current) simRef.current.alphaTarget(0.1).restart();
         d.fx = d.x;
         d.fy = d.y;
@@ -457,16 +455,16 @@ export default function UnifiedNetworkGraph({
         if (!event.active && simRef.current) simRef.current.alphaTarget(0);
         d.fx = null;
         d.fy = null;
+        const traveled = Math.hypot(event.x - dragStartX, event.y - dragStartY);
+        if (traveled < CLICK_TRAVEL_PX) handleNodeActivate(d);
       });
 
     select(canvas).call(drag_);
 
     canvas.addEventListener('mousemove', onMove);
-    canvas.addEventListener('click', onClick);
 
     return () => {
       canvas.removeEventListener('mousemove', onMove);
-      canvas.removeEventListener('click', onClick);
       select(canvas).on('.zoom', null);
       select(canvas).on('.drag', null);
     };
@@ -574,36 +572,43 @@ export default function UnifiedNetworkGraph({
           className="w-full h-[400px] sm:h-[500px] lg:h-[600px] bg-surface rounded-lg border border-border"
         />
         <div className="absolute bottom-4 right-4 flex gap-2">
-          {groups && (
-            <button
-              onClick={async () => {
-                const resolvedCurrent = resolveGraphMode({
-                  graphMode: localGraphMode,
-                  graphBubbleThreshold,
-                  nodeCount: nodesRef.current.length,
-                });
-                const next: 'individuals' | 'bubbles' = resolvedCurrent === 'bubbles' ? 'individuals' : 'bubbles';
-                setLocalGraphMode(next);
-                try {
-                  await fetch('/api/user/graph-display', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ graphMode: next }),
-                  });
-                } catch {
-                  // Silent fail — local state is source of truth until next page load.
-                }
-              }}
-              className="p-3 bg-surface border border-border rounded-lg hover:bg-surface-elevated transition-colors"
-              aria-label={resolveGraphMode({ graphMode: localGraphMode, graphBubbleThreshold, nodeCount: nodesRef.current.length }) === 'bubbles' ? t('showIndividuals') : t('showAsGroups')}
-              title={resolveGraphMode({ graphMode: localGraphMode, graphBubbleThreshold, nodeCount: nodesRef.current.length }) === 'bubbles' ? t('showIndividuals') : t('showAsGroups')}
-            >
-              <svg className="w-5 h-5 text-primary dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="8" cy="8" r="4" strokeWidth="2"/>
-                <circle cx="16" cy="16" r="4" strokeWidth="2"/>
-              </svg>
-            </button>
-          )}
+          {groups && (() => {
+            const bubblesActive = resolveGraphMode({
+              graphMode: localGraphMode,
+              graphBubbleThreshold,
+              nodeCount: nodesRef.current.length,
+            }) === 'bubbles';
+            const label = bubblesActive ? t('showIndividuals') : t('showAsGroups');
+            return (
+              <button
+                onClick={async () => {
+                  const next: 'individuals' | 'bubbles' = bubblesActive ? 'individuals' : 'bubbles';
+                  setLocalGraphMode(next);
+                  try {
+                    await fetch('/api/user/graph-display', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ graphMode: next }),
+                    });
+                  } catch {
+                    // Silent fail — local state is source of truth until next page load.
+                  }
+                }}
+                className={`p-3 border rounded-lg transition-colors ${
+                  bubblesActive
+                    ? 'bg-primary/20 border-primary/40 dark:bg-primary dark:border-primary'
+                    : 'bg-surface border-border hover:bg-surface-elevated'
+                }`}
+                aria-label={label}
+                title={label}
+              >
+                <svg className="w-5 h-5 text-primary dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="8" cy="8" r="4" strokeWidth="2"/>
+                  <circle cx="16" cy="16" r="4" strokeWidth="2"/>
+                </svg>
+              </button>
+            );
+          })()}
           <button
             onClick={() => setClusteringEnabled(!clusteringEnabled)}
             className={`p-3 border rounded-lg transition-colors ${

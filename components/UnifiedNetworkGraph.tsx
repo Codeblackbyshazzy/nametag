@@ -542,7 +542,7 @@ export default function UnifiedNetworkGraph({
             const memberRadius = isMobile ? 12 : 14;
             const padding = isMobile ? 18 : 24;
             const clusterRadius = Math.sqrt(Math.max(node.memberCount, 1)) * memberRadius * 1.2 + padding;
-            const targetDist = clusterRadius + (isMobile ? 60 : 90);
+            const targetDist = clusterRadius + (isMobile ? 130 : 180);
             const finalDist = Math.max(dist, targetDist);
             const ratio = finalDist / dist;
             const targetX = center.x + dx * ratio;

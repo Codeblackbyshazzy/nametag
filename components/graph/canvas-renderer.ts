@@ -12,6 +12,7 @@ export interface RenderContext {
   isMobile: boolean;
   hoveredNodeId: string | null;
   getPhoto: (id: string) => PhotoCacheEntry | undefined;
+  formatEdgeLabel?: (edge: SimulationEdge) => string;
 }
 
 const NODE_RADIUS = {
@@ -85,8 +86,8 @@ function drawArrowMarker(
   if (len === 0) return;
   const ux = dx / len;
   const uy = dy / len;
-  // Back off by the target node radius + a small gap
-  const r = nodeRadius(tgt, rc.isMobile) + 6;
+  // Back off by exactly the target node radius so the arrow tip touches the node.
+  const r = nodeRadius(tgt, rc.isMobile);
   const tipX = (tgt.x ?? 0) - ux * r;
   const tipY = (tgt.y ?? 0) - uy * r;
   const size = 6;
@@ -223,6 +224,34 @@ export function paintFrame(
   for (const e of edges) {
     const srcId = typeof e.source === 'string' ? e.source : e.source.id;
     if (srcId === rc.hoveredNodeId) drawEdge(rc, e, true);
+  }
+
+  // Edge labels for highlighted edges
+  if (rc.hoveredNodeId && rc.formatEdgeLabel && rc.lod !== 'dots') {
+    const fontSize = rc.isMobile ? 10 : 11;
+    rc.ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
+    rc.ctx.textAlign = 'center';
+    rc.ctx.textBaseline = 'middle';
+    for (const e of edges) {
+      const srcId = typeof e.source === 'string' ? e.source : e.source.id;
+      if (srcId !== rc.hoveredNodeId) continue;
+      const src = e.source as SimulationNode;
+      const tgt = e.target as SimulationNode;
+      if (src.x === undefined || tgt.x === undefined) continue;
+      const mx = ((src.x ?? 0) + (tgt.x ?? 0)) / 2;
+      const my = ((src.y ?? 0) + (tgt.y ?? 0)) / 2;
+      const label = rc.formatEdgeLabel(e);
+      // Background pill for legibility
+      const padX = 6;
+      const padY = 2;
+      const metrics = rc.ctx.measureText(label);
+      const w = metrics.width + padX * 2;
+      const h = fontSize + padY * 2;
+      rc.ctx.fillStyle = rc.isDark ? 'rgba(17,24,39,0.85)' : 'rgba(255,255,255,0.9)';
+      rc.ctx.fillRect(mx - w / 2, my - h / 2, w, h);
+      rc.ctx.fillStyle = e.color || (rc.isDark ? '#f3f4f6' : '#111827');
+      rc.ctx.fillText(label, mx, my);
+    }
   }
 
   // Nodes above edges

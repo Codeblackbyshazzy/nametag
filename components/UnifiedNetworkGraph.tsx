@@ -58,6 +58,7 @@ export default function UnifiedNetworkGraph({
   graphBubbleThreshold = 50,
 }: UnifiedNetworkGraphProps) {
   const t = useTranslations('dashboard.graph');
+  const tPeople = useTranslations('people');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
 
@@ -129,6 +130,22 @@ export default function UnifiedNetworkGraph({
     dirtyRef.current = true;
   }, []);
 
+  const formatEdgeLabel = useCallback((edge: SimulationEdge): string => {
+    const youLabel = tPeople('you');
+    const sourceName = edge.sourceLabel ?? '';
+    const targetName = edge.targetLabel ?? '';
+    const typeStr = capitalizeType
+      ? edge.type.charAt(0).toUpperCase() + edge.type.slice(1)
+      : edge.type.toLowerCase();
+    if (sourceName === youLabel || sourceName === 'You') {
+      return tPeople('graphEdgeLabelFromYou', { type: typeStr });
+    }
+    if (targetName === youLabel || targetName === 'You') {
+      return tPeople('graphEdgeLabelToYou', { type: typeStr });
+    }
+    return tPeople('graphEdgeLabel', { type: typeStr });
+  }, [tPeople, capitalizeType]);
+
   // Step 1: Paint loop
   const runPaint = useCallback(() => {
     const canvas = canvasRef.current;
@@ -182,11 +199,12 @@ export default function UnifiedNetworkGraph({
         isMobile,
         hoveredNodeId: hoveredNodeIdRef.current,
         getPhoto: getCachedPhoto,
+        formatEdgeLabel,
       },
       nodesRef.current,
       edgesRef.current,
     );
-  }, [isMobile, requestPaint]);
+  }, [isMobile, requestPaint, formatEdgeLabel]);
 
   useEffect(() => {
     const tick = () => {
@@ -222,9 +240,18 @@ export default function UnifiedNetworkGraph({
         clusteringEnabled ? mobileChargeStrength * 1.5 : mobileChargeStrength,
       ))
       .force('center', forceCenter(width / 2, height / 2))
-      .force('centerX', forceX<SimulationNode>(width / 2).strength(0.06))
-      .force('centerY', forceY<SimulationNode>(height / 2).strength(0.06))
+      .force('centerX', forceX<SimulationNode>(width / 2).strength(0.15))
+      .force('centerY', forceY<SimulationNode>(height / 2).strength(0.15))
       .force('collision', forceCollide().radius(collisionRadius));
+
+    // Pin the "you" node at the canvas center so the graph is always centered
+    // and the recenter button maps the user node back to the visual center.
+    for (const n of nodes) {
+      if (n.kind === 'person' && n.isCenter) {
+        n.fx = width / 2;
+        n.fy = height / 2;
+      }
+    }
 
     if (clusteringEnabled) {
       const uniqueGroupIds = Array.from(new Set(nodes.flatMap((n) => n.kind === 'person' ? n.groups : []))).filter(Boolean);
@@ -439,12 +466,14 @@ export default function UnifiedNetworkGraph({
         dragStartX = event.x;
         dragStartY = event.y;
         if (!event.active && simRef.current) simRef.current.alphaTarget(0.1).restart();
+        if (d.kind === 'person' && d.isCenter) return;
         d.fx = d.x;
         d.fy = d.y;
       })
       .on('drag', (event) => {
         const d = event.subject as SimulationNode | null;
         if (!d) return;
+        if (d.kind === 'person' && d.isCenter) return;
         const [gx, gy] = toGraphCoords(event.sourceEvent.clientX, event.sourceEvent.clientY);
         d.fx = gx;
         d.fy = gy;
@@ -453,8 +482,10 @@ export default function UnifiedNetworkGraph({
         const d = event.subject as SimulationNode | null;
         if (!d) return;
         if (!event.active && simRef.current) simRef.current.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
+        if (!(d.kind === 'person' && d.isCenter)) {
+          d.fx = null;
+          d.fy = null;
+        }
         const traveled = Math.hypot(event.x - dragStartX, event.y - dragStartY);
         if (traveled < CLICK_TRAVEL_PX) handleNodeActivate(d);
       });
@@ -470,8 +501,6 @@ export default function UnifiedNetworkGraph({
     };
   }, [centerNodeNonClickable, isMobile, requestPaint, router, setExpandedBubbles]);
 
-  // capitalizeType is reserved for future label rendering use.
-  void capitalizeType;
   // PersonSimNode type is used via inference in the type cast; suppress unused import.
   void (undefined as unknown as PersonSimNode);
 

@@ -548,6 +548,20 @@ export default function UnifiedNetworkGraph({
             const targetX = center.x + dx * ratio;
             const targetY = center.y + dy * ratio;
 
+            const canvas = canvasRef.current;
+            const rect = canvas?.getBoundingClientRect();
+            console.debug('[graph] click bubble', {
+              memberCount: node.memberCount,
+              from: { x: node.x, y: node.y },
+              to: { x: targetX, y: targetY },
+              dist: Math.round(dist),
+              targetDist: Math.round(targetDist),
+              finalDist: Math.round(finalDist),
+              ratio: Number(ratio.toFixed(2)),
+              clusterRadius: Math.round(clusterRadius),
+              center: { x: Math.round(center.x), y: Math.round(center.y) },
+              canvas: rect ? { w: Math.round(rect.width), h: Math.round(rect.height) } : null,
+            });
             node.x = targetX;
             node.y = targetY;
             node.fx = targetX;

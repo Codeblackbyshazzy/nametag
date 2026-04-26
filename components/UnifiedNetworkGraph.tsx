@@ -39,8 +39,6 @@ interface UnifiedNetworkGraphProps {
   chargeStrength?: number;
   animateNewNodes?: boolean;
   refreshKey?: number;
-  enableGroupClustering?: boolean;
-  clusterStrength?: number;
   graphMode?: 'individuals' | 'bubbles' | null;
   graphBubbleThreshold?: number;
 }
@@ -52,8 +50,6 @@ export default function UnifiedNetworkGraph({
   linkDistance = 120,
   chargeStrength = -400,
   refreshKey,
-  enableGroupClustering = true,
-  clusterStrength = 0.3,
   graphMode: graphModeProp = null,
   graphBubbleThreshold = 50,
 }: UnifiedNetworkGraphProps) {
@@ -77,7 +73,6 @@ export default function UnifiedNetworkGraph({
   const [selectedGroupFilters, setSelectedGroupFilters] = useState<GroupFilterItem[]>([]);
   const [includeMode, setIncludeMode] = useState<IncludeMode>('or');
   const [isMobile, setIsMobile] = useState(false);
-  const [clusteringEnabled, setClusteringEnabled] = useState(enableGroupClustering);
   const capitalizeType = useLocale().startsWith('de');
 
   // Bubble state
@@ -240,7 +235,7 @@ export default function UnifiedNetworkGraph({
     const height = rect.height;
     const mobileLinkDistance = isMobile ? 80 : linkDistance;
     const mobileChargeStrength = isMobile ? -250 : chargeStrength;
-    const personCollisionR = clusteringEnabled ? (isMobile ? 40 : 50) : (isMobile ? 25 : 30);
+    const personCollisionR = isMobile ? 25 : 30;
 
     // Visible-radius-aware collision so bubbles don't overlap "you" or each other.
     const collisionForNode = (d: SimulationNode): number => {
@@ -330,9 +325,7 @@ export default function UnifiedNetworkGraph({
           return mobileLinkDistance;
         })
         .strength((e) => e.type === 'membership' ? 0.4 : 1))
-      .force('charge', forceManyBody().strength(
-        clusteringEnabled ? mobileChargeStrength * 1.5 : mobileChargeStrength,
-      ))
+      .force('charge', forceManyBody().strength(mobileChargeStrength))
       .force('center', forceCenter(width / 2, height / 2))
       // Stronger pull for "you" anchors it at canvas-center under normal forces,
       // while still letting the user drag it around for fun.
@@ -349,36 +342,13 @@ export default function UnifiedNetworkGraph({
       .force('collision', forceCollide<SimulationNode>().radius(collisionForNode))
       .force('expandedCluster', expandedClusterField);
 
-    if (clusteringEnabled) {
-      const uniqueGroupIds = Array.from(new Set(nodes.flatMap((n) => n.kind === 'person' ? n.groups : []))).filter(Boolean);
-      const clusterRadius = Math.min(width, height) * 0.35;
-      const clusterCenters = new Map<string, { x: number; y: number }>();
-      uniqueGroupIds.forEach((groupId, index) => {
-        const angle = (2 * Math.PI * index) / uniqueGroupIds.length - Math.PI / 2;
-        clusterCenters.set(groupId, {
-          x: width / 2 + clusterRadius * Math.cos(angle),
-          y: height / 2 + clusterRadius * Math.sin(angle),
-        });
-      });
-      const target = (d: SimulationNode) => {
-        if (d.kind !== 'person') return null;
-        if (d.isCenter || d.groups.length === 0) return null;
-        return clusterCenters.get(d.groups[0]) ?? null;
-      };
-      sim
-        .force('clusterX', forceX<SimulationNode>((d) => target(d)?.x ?? width / 2)
-          .strength((d) => (target(d) ? clusterStrength : 0)))
-        .force('clusterY', forceY<SimulationNode>((d) => target(d)?.y ?? height / 2)
-          .strength((d) => (target(d) ? clusterStrength : 0)));
-    }
-
     sim.on('tick', () => {
       quadtreeRef.current = buildQuadtree(nodes);
       requestPaint();
     });
 
     return sim;
-  }, [isMobile, linkDistance, chargeStrength, clusteringEnabled, clusterStrength, requestPaint]);
+  }, [isMobile, linkDistance, chargeStrength, requestPaint]);
 
   // Step 3: Composition helper — recomposes sim data from raw cache
   const recomposeAndBuildSim = useCallback((raw: { nodes: RawGraphPerson[]; edges: SimulationEdge[] }) => {
@@ -469,7 +439,7 @@ export default function UnifiedNetworkGraph({
 
     fetchData();
     return () => { cancelled = true; };
-  }, [apiEndpoint, refreshKey, includeMode, includeGroupIds, excludeGroupIds, clusteringEnabled, recomposeAndBuildSim]);
+  }, [apiEndpoint, refreshKey, includeMode, includeGroupIds, excludeGroupIds, recomposeAndBuildSim]);
 
   // Step 5: Recompose when bubble state changes (mode toggle, expand/collapse)
   useEffect(() => {
@@ -804,30 +774,6 @@ export default function UnifiedNetworkGraph({
               </>
             );
           })()}
-          <button
-            onClick={() => setClusteringEnabled(!clusteringEnabled)}
-            className={`p-3 border rounded-lg transition-colors ${
-              clusteringEnabled
-                ? 'bg-primary/20 border-primary/40 dark:bg-primary dark:border-primary'
-                : 'bg-surface border-border hover:bg-surface-elevated'
-            }`}
-            aria-label={t('clusterByGroup')}
-            title={t('clusterByGroup')}
-          >
-            <svg
-              className="w-5 h-5 text-primary dark:text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          </button>
           <button
             onClick={recenterGraph}
             className="p-3 bg-surface border border-border rounded-lg hover:bg-surface-elevated transition-colors"

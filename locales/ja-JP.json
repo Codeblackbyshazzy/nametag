@@ -639,7 +639,6 @@
       "filterByGroups": "グループでフィルタリング",
       "filterPlaceholder": "グループでフィルタリングするには入力してください...",
       "noGroupsFound": "一致するグループは見つかりませんでした",
-      "clusterByGroup": "グループごとにクラスタリング",
       "recenterGraph": "グラフを再中心に配置",
       "matchMode": {
         "any": "いずれか",

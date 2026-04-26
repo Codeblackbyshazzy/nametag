@@ -639,7 +639,6 @@
       "filterByGroups": "Filtrar por Grupos",
       "filterPlaceholder": "Escribe para filtrar por grupos...",
       "noGroupsFound": "No se encontraron grupos que coincidan",
-      "clusterByGroup": "Agrupar por grupo",
       "recenterGraph": "Volver a centrar el gráfico",
       "matchMode": {
         "any": "Cualquiera",

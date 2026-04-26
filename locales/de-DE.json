@@ -639,7 +639,6 @@
       "filterByGroups": "Nach Gruppen filtern",
       "filterPlaceholder": "Tippen, um nach Gruppen zu filtern...",
       "noGroupsFound": "Keine Gruppen gefunden passend zu",
-      "clusterByGroup": "Nach Gruppe clustern",
       "recenterGraph": "Graph neu zentrieren",
       "matchMode": {
         "any": "Beliebig",

@@ -639,7 +639,6 @@
       "filterByGroups": "按分组筛选",
       "filterPlaceholder": "输入以按分组筛选...",
       "noGroupsFound": "未找到匹配的分组",
-      "clusterByGroup": "按分组群集",
       "recenterGraph": "重新居中图形",
       "matchMode": {
         "any": "任意",

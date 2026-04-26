@@ -242,13 +242,14 @@ export default function UnifiedNetworkGraph({
     const mobileChargeStrength = isMobile ? -250 : chargeStrength;
     const personCollisionR = clusteringEnabled ? (isMobile ? 40 : 50) : (isMobile ? 25 : 30);
 
-    // Visible-radius-aware collision so bubbles don't overlap "you".
+    // Visible-radius-aware collision so bubbles don't overlap "you" or each other.
     const collisionForNode = (d: SimulationNode): number => {
-      if (d.kind === 'bubble') return (isMobile ? 12 : 14) + 6;
+      if (d.kind === 'bubble') return (isMobile ? 12 : 14) + (isMobile ? 18 : 28);
       return personCollisionR;
     };
 
     const membershipLinkDistance = isMobile ? 22 : 32;
+    const aggregatedLinkDistance = isMobile ? 150 : 220;
 
     // Custom force: each expanded ghost behaves like an "invisible big bubble".
     // Members get strongly pulled toward the ghost (orbiting close to it);
@@ -323,7 +324,11 @@ export default function UnifiedNetworkGraph({
       .velocityDecay(0.6)
       .force('link', forceLink<SimulationNode, SimulationEdge>(edges)
         .id((d) => d.id)
-        .distance((e) => e.type === 'membership' ? membershipLinkDistance : mobileLinkDistance)
+        .distance((e) => {
+          if (e.type === 'membership') return membershipLinkDistance;
+          if (e.type === 'aggregated') return aggregatedLinkDistance;
+          return mobileLinkDistance;
+        })
         .strength((e) => e.type === 'membership' ? 0.4 : 1))
       .force('charge', forceManyBody().strength(
         clusteringEnabled ? mobileChargeStrength * 1.5 : mobileChargeStrength,

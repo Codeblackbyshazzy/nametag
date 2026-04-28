@@ -119,6 +119,12 @@
       "nameDisplayFormatShortDescription": "Mostrar solo apodo o primer nombre",
       "nameDisplayFormatSuccess": "Formato de nombre actualizado correctamente",
       "nameDisplayFormatError": "Error al actualizar el formato de nombre",
+      "graphModeTitle": "Visualización del grafo",
+      "graphModeDescription": "Cómo mostrar tu grafo de red en el panel.",
+      "graphModeIndividuals": "Mostrar siempre personas",
+      "graphModeBubbles": "Mostrar siempre grupos",
+      "graphDisplaySuccess": "Visualización actualizada",
+      "graphDisplayError": "No se pudo actualizar la visualización",
       "language": {
         "title": "Idioma",
         "description": "Elige tu idioma",
@@ -629,7 +635,6 @@
       "filterByGroups": "Filtrar por Grupos",
       "filterPlaceholder": "Escribe para filtrar por grupos...",
       "noGroupsFound": "No se encontraron grupos que coincidan",
-      "clusterByGroup": "Agrupar por grupo",
       "recenterGraph": "Volver a centrar el gráfico",
       "matchMode": {
         "any": "Cualquiera",
@@ -667,7 +672,11 @@
         "example": "Amigos",
         "pillTip": "Haz clic en el nombre de un grupo para incluirlo o excluirlo.",
         "modeTip": "Modo: coincidir con uno o todos los grupos incluidos."
-      }
+      },
+      "showAsGroups": "Mostrar como grupos",
+      "showIndividuals": "Mostrar personas",
+      "collapseAllGroups": "Contraer todos los grupos",
+      "unsortedBubbleLabel": "Sin grupo"
     }
   },
   "people": {

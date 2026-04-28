@@ -119,6 +119,12 @@
       "nameDisplayFormatShortDescription": "仅显示昵称或名字",
       "nameDisplayFormatSuccess": "姓名显示格式已更新",
       "nameDisplayFormatError": "更新姓名显示格式失败",
+      "graphModeTitle": "网络图显示",
+      "graphModeDescription": "如何在仪表盘中显示你的人脉网络图。",
+      "graphModeIndividuals": "始终单独显示",
+      "graphModeBubbles": "始终按组显示",
+      "graphDisplaySuccess": "显示已更新",
+      "graphDisplayError": "无法更新显示",
       "language": {
         "title": "语言",
         "description": "选择您偏好的语言",
@@ -629,7 +635,6 @@
       "filterByGroups": "按分组筛选",
       "filterPlaceholder": "输入以按分组筛选...",
       "noGroupsFound": "未找到匹配的分组",
-      "clusterByGroup": "按分组群集",
       "recenterGraph": "重新居中图形",
       "matchMode": {
         "any": "任意",
@@ -667,7 +672,11 @@
         "example": "朋友",
         "pillTip": "点击分组名称即可将其包含或排除。",
         "modeTip": "模式：匹配一个或所有已包含的分组。"
-      }
+      },
+      "showAsGroups": "按组显示",
+      "showIndividuals": "单独显示",
+      "collapseAllGroups": "收起所有组",
+      "unsortedBubbleLabel": "未分组"
     }
   },
   "people": {

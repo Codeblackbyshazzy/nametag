@@ -119,6 +119,12 @@
       "nameDisplayFormatShortDescription": "Show only nickname or first name",
       "nameDisplayFormatSuccess": "Name display format updated successfully",
       "nameDisplayFormatError": "Failed to update name display format",
+      "graphModeTitle": "Network graph display",
+      "graphModeDescription": "How to display your network graph on the dashboard.",
+      "graphModeIndividuals": "Always show individuals",
+      "graphModeBubbles": "Always show groups",
+      "graphDisplaySuccess": "Graph display updated",
+      "graphDisplayError": "Failed to update graph display",
       "language": {
         "title": "Language",
         "description": "Choose your preferred language",
@@ -629,7 +635,6 @@
       "filterByGroups": "Filter by Groups",
       "filterPlaceholder": "Type to filter by groups...",
       "noGroupsFound": "No groups found matching",
-      "clusterByGroup": "Cluster by group",
       "recenterGraph": "Re-center graph",
       "matchMode": {
         "any": "Any",
@@ -667,7 +672,11 @@
         "example": "Friends",
         "pillTip": "Click a group name to include or exclude it.",
         "modeTip": "Mode: match one or all selected groups."
-      }
+      },
+      "showAsGroups": "Show as groups",
+      "showIndividuals": "Show individuals",
+      "collapseAllGroups": "Collapse all groups",
+      "unsortedBubbleLabel": "Unsorted"
     }
   },
   "people": {

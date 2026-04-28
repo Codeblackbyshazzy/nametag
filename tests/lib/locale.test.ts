@@ -115,6 +115,7 @@ describe('Locale Utilities', () => {
         dateFormat: 'MDY',
         nameOrder: 'WESTERN',
         nameDisplayFormat: 'FULL',
+        graphMode: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -154,6 +155,7 @@ describe('Locale Utilities', () => {
         dateFormat: 'MDY',
         nameOrder: 'WESTERN',
         nameDisplayFormat: 'FULL',
+        graphMode: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

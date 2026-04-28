@@ -119,6 +119,12 @@
       "nameDisplayFormatShortDescription": "Nur Spitzname oder Vorname anzeigen",
       "nameDisplayFormatSuccess": "Namensanzeigeformat erfolgreich aktualisiert",
       "nameDisplayFormatError": "Fehler beim Aktualisieren des Namensanzeigeformats",
+      "graphModeTitle": "Netzwerk-Grafikanzeige",
+      "graphModeDescription": "Wie dein Netzwerk-Graph auf dem Dashboard angezeigt wird.",
+      "graphModeIndividuals": "Immer einzeln anzeigen",
+      "graphModeBubbles": "Immer als Gruppen anzeigen",
+      "graphDisplaySuccess": "Anzeige aktualisiert",
+      "graphDisplayError": "Anzeige konnte nicht aktualisiert werden",
       "language": {
         "title": "Sprache",
         "description": "Wähle deine bevorzugte Sprache",
@@ -629,7 +635,6 @@
       "filterByGroups": "Nach Gruppen filtern",
       "filterPlaceholder": "Tippen, um nach Gruppen zu filtern...",
       "noGroupsFound": "Keine Gruppen gefunden passend zu",
-      "clusterByGroup": "Nach Gruppe clustern",
       "recenterGraph": "Graph neu zentrieren",
       "matchMode": {
         "any": "Beliebig",
@@ -664,8 +669,14 @@
         "anyModeDescription": "Es werden Personen angezeigt, die mindestens einer der ausgewählten Bedingungen entsprechen, also mindestens einer inkludierten Gruppe und keiner exkludierten Gruppe angehören.",
         "allMode": "Alle (UND):",
         "allModeDescription": "Es werden nur Personen angezeigt, die alle ausgewählten Bedingungen erfüllen, also allen inkludierten Gruppen und keiner exkludierten Gruppen angehören.",
-        "example": "Freunde"
-      }
+        "example": "Freunde",
+        "pillTip": "Auf einen Gruppennamen klicken, um ihn ein- oder auszuschließen.",
+        "modeTip": "Modus: eine oder alle ausgewählten Gruppen abgleichen."
+      },
+      "showAsGroups": "Als Gruppen anzeigen",
+      "showIndividuals": "Einzeln anzeigen",
+      "collapseAllGroups": "Alle Gruppen einklappen",
+      "unsortedBubbleLabel": "Ohne Gruppe"
     }
   },
   "people": {

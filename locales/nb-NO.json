@@ -119,6 +119,12 @@
       "nameDisplayFormatShortDescription": "Vis kun kallenavn eller fornavn",
       "nameDisplayFormatSuccess": "Navnevisningsformat oppdatert",
       "nameDisplayFormatError": "Kunne ikke oppdatere navnevisningsformat",
+      "graphModeTitle": "Visning av nettverksgraf",
+      "graphModeDescription": "Hvordan nettverksgrafen vises i dashbordet.",
+      "graphModeIndividuals": "Vis alltid enkeltvis",
+      "graphModeBubbles": "Vis alltid som grupper",
+      "graphDisplaySuccess": "Visning oppdatert",
+      "graphDisplayError": "Kunne ikke oppdatere visningen",
       "language": {
         "title": "Språk",
         "description": "Velg språket ditt",
@@ -629,7 +635,6 @@
       "filterByGroups": "Filtrer etter grupper",
       "filterPlaceholder": "Skriv for å filtrere etter grupper...",
       "noGroupsFound": "Fant ingen grupper som samsvarer",
-      "clusterByGroup": "Klynge etter gruppe",
       "recenterGraph": "Sentrer grafen på nytt",
       "matchMode": {
         "any": "Noen",
@@ -667,7 +672,11 @@
         "example": "Venner",
         "pillTip": "Klikk på et gruppenavn for å inkludere eller ekskludere det.",
         "modeTip": "Modus: match én eller alle inkluderte grupper."
-      }
+      },
+      "showAsGroups": "Vis som grupper",
+      "showIndividuals": "Vis enkeltvis",
+      "collapseAllGroups": "Lukk alle grupper",
+      "unsortedBubbleLabel": "Uten gruppe"
     }
   },
   "people": {

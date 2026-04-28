@@ -119,6 +119,12 @@
       "nameDisplayFormatShortDescription": "ニックネームまたは名のみ表示",
       "nameDisplayFormatSuccess": "名前の表示形式を更新しました",
       "nameDisplayFormatError": "名前の表示形式の更新に失敗しました",
+      "graphModeTitle": "ネットワークグラフの表示",
+      "graphModeDescription": "ダッシュボードでネットワークグラフを表示する方法。",
+      "graphModeIndividuals": "常に個別に表示",
+      "graphModeBubbles": "常にグループで表示",
+      "graphDisplaySuccess": "表示を更新しました",
+      "graphDisplayError": "表示の更新に失敗しました",
       "language": {
         "title": "言語",
         "description": "お好みの言語を選択してください",
@@ -629,7 +635,6 @@
       "filterByGroups": "グループでフィルタリング",
       "filterPlaceholder": "グループでフィルタリングするには入力してください...",
       "noGroupsFound": "一致するグループは見つかりませんでした",
-      "clusterByGroup": "グループごとにクラスタリング",
       "recenterGraph": "グラフを再中心に配置",
       "matchMode": {
         "any": "いずれか",
@@ -667,7 +672,11 @@
         "example": "友だち",
         "pillTip": "グループ名をクリックして、含める/除外を切り替えます。",
         "modeTip": "モード: 含めたグループの1つまたはすべてに一致。"
-      }
+      },
+      "showAsGroups": "グループで表示",
+      "showIndividuals": "個別に表示",
+      "collapseAllGroups": "すべてのグループを折りたたむ",
+      "unsortedBubbleLabel": "未分類"
     }
   },
   "people": {

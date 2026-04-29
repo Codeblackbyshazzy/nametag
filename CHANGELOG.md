@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.44.2](https://github.com/mattogodoy/nametag/compare/v0.44.1...v0.44.2) (2026-04-29)
+
+
+### Bug Fixes
+
+* **graph:** clone edges per recompose so forceLink sees fresh string ids ([e2f994b](https://github.com/mattogodoy/nametag/commit/e2f994b3e5cbda09b7c0e157f3cdf0e77557d3f1))
+* **graph:** clone edges per recompose so forceLink sees fresh string ids ([ecf46a3](https://github.com/mattogodoy/nametag/commit/ecf46a3061623e45c6d5f95353d935d100961cbb))
+
 ## [0.44.1](https://github.com/mattogodoy/nametag/compare/v0.44.0...v0.44.1) (2026-04-28)
 
 

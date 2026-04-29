@@ -1195,7 +1195,7 @@
       "uploadError": "Foto konnte nicht hochgeladen werden",
       "removeError": "Foto konnte nicht entfernt werden",
       "formatError": "Format nicht unterstützt. Verwende JPEG, PNG, GIF oder WebP.",
-      "sizeError": "Das Foto darf maximal 10 MB groß sein",
+      "sizeError": "Das Foto darf maximal 50 MB groß sein",
       "sourceTitle": "Foto hinzufügen",
       "dropzoneText": "Ziehen und ablegen, einfügen oder klicken zum Durchsuchen",
       "dropzoneActive": "Bild hier ablegen",

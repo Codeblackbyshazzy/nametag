@@ -106,7 +106,7 @@ export function personToVCard(
   // Map predefined types without vCard mapping to English display names for export
   const EXPORT_LABELS: Record<string, string> = {
     nameday: 'Name day',
-    memorial: 'Memorial',
+    memorial: 'Date of Death',
   };
 
   // Other dates - everything except birthday and anniversary

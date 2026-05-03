@@ -775,6 +775,9 @@ describe('mergePeople', () => {
     mocks.mockTxClient.personCustomField.deleteMany.mockResolvedValue({ count: 0 });
     mocks.mockTxClient.importantDate.updateMany.mockResolvedValue({ count: 0 });
     mocks.mockTxClient.importantDate.deleteMany.mockResolvedValue({ count: 0 });
+    // Default: target has no existing journal references → updateMany still
+    // runs unconditionally, but deleteMany is skipped. Tests that exercise
+    // the collision path override findMany per-test.
     mocks.mockTxClient.journalEntryPerson.findMany.mockResolvedValue([]);
     mocks.mockTxClient.journalEntryPerson.updateMany.mockResolvedValue({ count: 0 });
     mocks.mockTxClient.journalEntryPerson.deleteMany.mockResolvedValue({ count: 0 });
@@ -970,6 +973,7 @@ describe('mergePeople', () => {
   it('re-parents source journal entry references to target', async () => {
     await mergePeople(PERSON_ID, SOURCE_ID, USER_ID);
 
+    expect(mocks.mockTxClient.journalEntryPerson.updateMany).toHaveBeenCalledTimes(1);
     expect(mocks.mockTxClient.journalEntryPerson.updateMany).toHaveBeenCalledWith({
       where: { personId: SOURCE_ID },
       data: { personId: PERSON_ID },
@@ -984,16 +988,24 @@ describe('mergePeople', () => {
 
     await mergePeople(PERSON_ID, SOURCE_ID, USER_ID);
 
+    expect(mocks.mockTxClient.journalEntryPerson.deleteMany).toHaveBeenCalledTimes(1);
     expect(mocks.mockTxClient.journalEntryPerson.deleteMany).toHaveBeenCalledWith({
       where: {
         personId: SOURCE_ID,
         journalEntryId: { in: ['je-1', 'je-2'] },
       },
     });
+    expect(mocks.mockTxClient.journalEntryPerson.updateMany).toHaveBeenCalledTimes(1);
     expect(mocks.mockTxClient.journalEntryPerson.updateMany).toHaveBeenCalledWith({
       where: { personId: SOURCE_ID },
       data: { personId: PERSON_ID },
     });
+
+    // Order matters: the bare updateMany would throw P2002 on the
+    // (journalEntryId, personId) unique constraint if it ran before delete.
+    const deleteOrder = mocks.mockTxClient.journalEntryPerson.deleteMany.mock.invocationCallOrder[0];
+    const updateOrder = mocks.mockTxClient.journalEntryPerson.updateMany.mock.invocationCallOrder[0];
+    expect(deleteOrder).toBeLessThan(updateOrder);
   });
 
   it('does not delete journal references when target has none', async () => {

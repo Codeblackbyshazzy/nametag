@@ -1,7 +1,7 @@
 export function deriveSlug(input: string): string {
   return input
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/\p{M}/gu, '')
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .trim()

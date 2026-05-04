@@ -81,3 +81,45 @@ describe('formatValueForDisplay', () => {
     expect(formatValueForDisplay('SELECT', 'vegan')).toBe('vegan');
   });
 });
+
+import {
+  customFieldTemplateCreateSchema,
+  customFieldTemplateUpdateSchema,
+} from '../../lib/validations';
+
+describe('customFieldTemplateCreateSchema', () => {
+  it('requires options when type is SELECT', () => {
+    const result = customFieldTemplateCreateSchema.safeParse({
+      name: 'Diet',
+      type: 'SELECT',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts SELECT with options', () => {
+    const result = customFieldTemplateCreateSchema.safeParse({
+      name: 'Diet',
+      type: 'SELECT',
+      options: ['vegan'],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts non-SELECT types without options', () => {
+    const result = customFieldTemplateCreateSchema.safeParse({
+      name: 'Has pets',
+      type: 'BOOLEAN',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('customFieldTemplateUpdateSchema', () => {
+  it('rejects empty objects', () => {
+    expect(customFieldTemplateUpdateSchema.safeParse({}).success).toBe(false);
+  });
+
+  it('accepts partial updates', () => {
+    expect(customFieldTemplateUpdateSchema.safeParse({ name: 'New' }).success).toBe(true);
+  });
+});

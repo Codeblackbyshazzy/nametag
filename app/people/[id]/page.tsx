@@ -90,6 +90,7 @@ export default async function PersonDetailsPage({
 }) {
   const session = await auth();
   const t = await getTranslations('people');
+  const tCf = await getTranslations('customFields.person');
 
   if (!session?.user) {
     redirect('/login');
@@ -682,6 +683,31 @@ export default async function PersonDetailsPage({
                       );
                     })}
                   </div>
+                </div>
+              )}
+
+              {/* Custom Fields */}
+              {person.customFieldValues.length > 0 && (
+                <div className="border border-border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    {tCf('sectionTitle')}
+                  </h3>
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {person.customFieldValues.map((v) => {
+                      const display =
+                        v.template.type === 'BOOLEAN'
+                          ? v.value === 'true'
+                            ? tCf('booleanYes')
+                            : tCf('booleanNo')
+                          : v.value;
+                      return (
+                        <div key={v.id}>
+                          <dt className="text-xs text-muted-foreground">{v.template.name}</dt>
+                          <dd className="text-sm text-foreground">{display}</dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
                 </div>
               )}
 

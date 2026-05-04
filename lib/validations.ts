@@ -132,13 +132,49 @@ const customFieldSchema = z.object({
   type: z.string().max(50).nullable().optional(),
 });
 
-const customFieldValueInputSchemaInline = z.object({
+// ============================================
+// Custom field schemas
+// ============================================
+
+export const customFieldTypeSchema = z.enum(['TEXT', 'NUMBER', 'BOOLEAN', 'SELECT']);
+
+const optionSchema = z
+  .string()
+  .trim()
+  .min(1, 'Option must not be empty')
+  .max(100, 'Option must be 100 characters or fewer');
+
+export const customFieldTemplateCreateSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Name is required').max(60, 'Name must be 60 characters or fewer'),
+    type: customFieldTypeSchema,
+    options: z.array(optionSchema).max(50, 'Up to 50 options').optional(),
+  })
+  .refine(
+    (val) => val.type !== 'SELECT' || (val.options && val.options.length > 0),
+    { message: 'At least one option is required for single-select fields', path: ['options'] }
+  );
+
+export const customFieldTemplateUpdateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(60).optional(),
+    options: z.array(optionSchema).max(50).optional(),
+  })
+  .refine((val) => Object.keys(val).length > 0, {
+    message: 'At least one field must be provided',
+  });
+
+export const customFieldTemplateReorderSchema = z.object({
+  ids: z.array(cuidSchema).min(1).max(200),
+});
+
+export const customFieldValueInputSchema = z.object({
   templateId: cuidSchema,
   value: z.string().max(2000),
 });
 
-const customFieldValuesArraySchemaInline = z
-  .array(customFieldValueInputSchemaInline)
+export const customFieldValuesArraySchema = z
+  .array(customFieldValueInputSchema)
   .max(200)
   .optional();
 
@@ -192,7 +228,7 @@ export const createPersonSchema = z.object({
   imHandles: z.array(imHandleSchema).optional(),
   locations: z.array(locationSchema).optional(),
   customFields: z.array(customFieldSchema).optional(),
-  customFieldValues: customFieldValuesArraySchemaInline,
+  customFieldValues: customFieldValuesArraySchema,
 });
 
 export const updatePersonSchema = createPersonSchema.partial();
@@ -474,56 +510,6 @@ export const updateImportantDateSchema = createImportantDateSchema;
 // ============================================
 
 import { NextResponse } from 'next/server';
-
-// ============================================
-// Custom field schemas
-// ============================================
-
-export const customFieldTypeSchema = z.enum(['TEXT', 'NUMBER', 'BOOLEAN', 'SELECT']);
-
-const optionSchema = z
-  .string()
-  .trim()
-  .min(1, 'Option must not be empty')
-  .max(100, 'Option must be 100 characters or fewer');
-
-export const customFieldTemplateCreateSchema = z
-  .object({
-    name: z.string().trim().min(1, 'Name is required').max(60, 'Name must be 60 characters or fewer'),
-    type: customFieldTypeSchema,
-    options: z.array(optionSchema).max(50, 'Up to 50 options').optional(),
-  })
-  .refine(
-    (val) => val.type !== 'SELECT' || (val.options && val.options.length > 0),
-    { message: 'At least one option is required for single-select fields', path: ['options'] }
-  );
-
-export const customFieldTemplateUpdateSchema = z
-  .object({
-    name: z.string().trim().min(1).max(60).optional(),
-    options: z.array(optionSchema).max(50).optional(),
-  })
-  .refine((val) => Object.keys(val).length > 0, {
-    message: 'At least one field must be provided',
-  });
-
-export const customFieldTemplateReorderSchema = z.object({
-  ids: z.array(cuidSchema).min(1).max(200),
-});
-
-export const customFieldValueInputSchema = z.object({
-  templateId: cuidSchema,
-  value: z.string().max(2000),
-});
-
-export const customFieldValuesArraySchema = z
-  .array(customFieldValueInputSchema)
-  .max(200)
-  .optional();
-
-// ============================================
-// Helper function for API validation
-// ============================================
 
 export function validateRequest<T>(
   schema: z.ZodSchema<T>,

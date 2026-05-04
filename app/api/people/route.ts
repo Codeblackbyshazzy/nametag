@@ -175,8 +175,8 @@ export const POST = withAuth(async (request, session) => {
       }
     }
 
-    // Apply custom field values if provided
-    if (validation.data.customFieldValues && validation.data.customFieldValues.length > 0) {
+    // Apply custom field values if provided (undefined = no-op, [] = clear all)
+    if (validation.data.customFieldValues !== undefined) {
       try {
         await applyCustomFieldValues(prisma, session.user.id, person.id, validation.data.customFieldValues);
       } catch (err) {

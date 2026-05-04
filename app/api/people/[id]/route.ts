@@ -8,6 +8,7 @@ import { autoExportPerson } from '@/lib/carddav/auto-export';
 import { deleteFromCardDav as deleteContactFromCardDav } from '@/lib/carddav/delete-contact';
 import { savePhoto, deletePersonPhotos, isPhotoFilename } from '@/lib/photo-storage';
 import { createModuleLogger } from '@/lib/logger';
+import { applyCustomFieldValues, CustomFieldValidationError } from '@/lib/customFields/persistence';
 
 const log = createModuleLogger('people');
 
@@ -119,6 +120,18 @@ export const PUT = withAuth(async (request, session, context) => {
 
     if (!person) {
       return apiResponse.notFound('Person not found');
+    }
+
+    // Apply custom field values if provided (undefined = no-op, [] = clear all)
+    if (validation.data.customFieldValues !== undefined) {
+      try {
+        await applyCustomFieldValues(prisma, session.user.id, id, validation.data.customFieldValues);
+      } catch (err) {
+        if (err instanceof CustomFieldValidationError) {
+          return apiResponse.error(err.message);
+        }
+        throw err;
+      }
     }
 
     // CardDAV sync logic for toggle state changes not handled by the service:

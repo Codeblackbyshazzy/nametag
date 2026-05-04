@@ -4,6 +4,7 @@ import { apiResponse, handleApiError, parseRequestBody, withAuth } from '@/lib/a
 import { canCreateResource, canEnableReminder } from '@/lib/billing';
 import { savePhoto } from '@/lib/photo-storage';
 import { createPerson } from '@/lib/services/person';
+import { applyCustomFieldValues, CustomFieldValidationError } from '@/lib/customFields/persistence';
 
 // GET /api/people - List all people for the current user
 export const GET = withAuth(async (request, session) => {
@@ -171,6 +172,21 @@ export const POST = withAuth(async (request, session) => {
           data: { photo: photoFilename },
         });
         (person as Record<string, unknown>).photo = photoFilename;
+      }
+    }
+
+    // Apply custom field values if provided
+    if (validation.data.customFieldValues && validation.data.customFieldValues.length > 0) {
+      try {
+        await applyCustomFieldValues(prisma, session.user.id, person.id, validation.data.customFieldValues);
+      } catch (err) {
+        if (err instanceof CustomFieldValidationError) {
+          // The person was created but values failed validation. Soft-rollback by deleting the person
+          // so the user does not end up with a half-created record.
+          await prisma.person.delete({ where: { id: person.id } });
+          return apiResponse.error(err.message);
+        }
+        throw err;
       }
     }
 

@@ -132,6 +132,16 @@ const customFieldSchema = z.object({
   type: z.string().max(50).nullable().optional(),
 });
 
+const customFieldValueInputSchemaInline = z.object({
+  templateId: cuidSchema,
+  value: z.string().max(2000),
+});
+
+const customFieldValuesArraySchemaInline = z
+  .array(customFieldValueInputSchemaInline)
+  .max(200)
+  .optional();
+
 export const createPersonSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   surname: z.string().max(100).nullable().optional(),
@@ -182,6 +192,7 @@ export const createPersonSchema = z.object({
   imHandles: z.array(imHandleSchema).optional(),
   locations: z.array(locationSchema).optional(),
   customFields: z.array(customFieldSchema).optional(),
+  customFieldValues: customFieldValuesArraySchemaInline,
 });
 
 export const updatePersonSchema = createPersonSchema.partial();

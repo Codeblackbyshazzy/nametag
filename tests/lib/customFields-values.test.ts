@@ -25,7 +25,7 @@ describe('validateRawValue', () => {
   it('rejects non-numeric strings for NUMBER', () => {
     expect(validateRawValue('NUMBER', 'abc', [])).toEqual({
       ok: false,
-      error: 'not a number',
+      error: 'NOT_A_NUMBER',
     });
   });
 
@@ -36,7 +36,7 @@ describe('validateRawValue', () => {
   it('rejects Infinity / NaN for NUMBER', () => {
     expect(validateRawValue('NUMBER', 'Infinity', [])).toEqual({
       ok: false,
-      error: 'not a number',
+      error: 'NOT_A_NUMBER',
     });
   });
 
@@ -45,7 +45,7 @@ describe('validateRawValue', () => {
     expect(validateRawValue('BOOLEAN', 'false', [])).toEqual({ ok: true });
     expect(validateRawValue('BOOLEAN', 'yes', [])).toEqual({
       ok: false,
-      error: 'must be "true" or "false"',
+      error: 'NOT_BOOLEAN',
     });
   });
 
@@ -58,7 +58,7 @@ describe('validateRawValue', () => {
   it('rejects SELECT values not in the options list', () => {
     expect(validateRawValue('SELECT', 'pescatarian', ['vegan', 'omnivore'])).toEqual({
       ok: false,
-      error: 'not in options',
+      error: 'NOT_IN_OPTIONS',
     });
   });
 });
@@ -72,9 +72,9 @@ describe('formatValueForDisplay', () => {
     expect(formatValueForDisplay('NUMBER', '42')).toBe('42');
   });
 
-  it('returns "Yes" / "No" for BOOLEAN', () => {
-    expect(formatValueForDisplay('BOOLEAN', 'true')).toBe('Yes');
-    expect(formatValueForDisplay('BOOLEAN', 'false')).toBe('No');
+  it('returns the raw value as-is for BOOLEAN', () => {
+    expect(formatValueForDisplay('BOOLEAN', 'true')).toBe('true');
+    expect(formatValueForDisplay('BOOLEAN', 'false')).toBe('false');
   });
 
   it('returns the option string for SELECT', () => {

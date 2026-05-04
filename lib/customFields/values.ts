@@ -1,6 +1,10 @@
 import type { CustomFieldType } from '@prisma/client';
 
-export type ValidationResult = { ok: true } | { ok: false; error: string };
+export type ValidationErrorCode = 'NOT_A_NUMBER' | 'NOT_BOOLEAN' | 'NOT_IN_OPTIONS';
+
+export type ValidationResult =
+  | { ok: true }
+  | { ok: false; error: ValidationErrorCode };
 
 export function isEmptyRawValue(raw: string): boolean {
   return raw.trim() === '';
@@ -17,16 +21,19 @@ export function validateRawValue(
     case 'NUMBER': {
       const parsed = Number(raw);
       if (!Number.isFinite(parsed)) {
-        return { ok: false, error: 'not a number' };
+        return { ok: false, error: 'NOT_A_NUMBER' };
       }
       return { ok: true };
     }
     case 'BOOLEAN':
       if (raw === 'true' || raw === 'false') return { ok: true };
-      return { ok: false, error: 'must be "true" or "false"' };
+      return { ok: false, error: 'NOT_BOOLEAN' };
     case 'SELECT':
       if (options.includes(raw)) return { ok: true };
-      return { ok: false, error: 'not in options' };
+      return { ok: false, error: 'NOT_IN_OPTIONS' };
+    default:
+      const _exhaustive: never = type;
+      return _exhaustive;
   }
 }
 
@@ -35,8 +42,10 @@ export function formatValueForDisplay(type: CustomFieldType, raw: string): strin
     case 'TEXT':
     case 'NUMBER':
     case 'SELECT':
-      return raw;
     case 'BOOLEAN':
-      return raw === 'true' ? 'Yes' : 'No';
+      return raw;
+    default:
+      const _exhaustive: never = type;
+      return _exhaustive;
   }
 }

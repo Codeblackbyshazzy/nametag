@@ -3,6 +3,29 @@ import { customFieldTemplateUpdateSchema, validateRequest } from '@/lib/validati
 import { apiResponse, handleApiError, parseRequestBody, withAuth } from '@/lib/api-utils';
 import { sanitizeName } from '@/lib/sanitize';
 
+/**
+ * Detects an unambiguous option rename by set-difference.
+ *
+ * Returns `{ from, to }` only when exactly one option was removed and one was
+ * added — the single case where rename intent is clear. Pure adds, pure removes,
+ * and multi-renames return null so the cascade is skipped safely (existing values
+ * for removed options stay in the DB and surface as out-of-options warnings in UI).
+ */
+function detectOptionRename(
+  oldOptions: string[],
+  newOptions: string[]
+): { from: string; to: string } | null {
+  const oldSet = new Set(oldOptions);
+  const newSet = new Set(newOptions);
+  const removed = oldOptions.filter((o) => !newSet.has(o));
+  const added = newOptions.filter((o) => !oldSet.has(o));
+
+  if (removed.length === 1 && added.length === 1) {
+    return { from: removed[0], to: added[0] };
+  }
+  return null;
+}
+
 // GET /api/custom-field-templates/[id] - Get a single custom field template
 export const GET = withAuth(async (_request, session, context) => {
   try {
@@ -58,23 +81,6 @@ export const PUT = withAuth(async (request, session, context) => {
       return apiResponse.notFound('Custom field template not found');
     }
 
-    // Detect option renames for SELECT type (positional comparison)
-    const shouldCascadeRenames =
-      options !== undefined &&
-      existing.type === 'SELECT' &&
-      options.length === existing.options.length;
-
-    const renames: Array<{ from: string; to: string }> = [];
-    if (shouldCascadeRenames) {
-      for (let i = 0; i < existing.options.length; i++) {
-        const oldOption = existing.options[i];
-        const newOption = options[i];
-        if (oldOption !== newOption) {
-          renames.push({ from: oldOption, to: newOption });
-        }
-      }
-    }
-
     // Build update data (slug is immutable — never updated)
     const updateData: { name?: string; options?: string[] } = {};
     if (name !== undefined) {
@@ -84,22 +90,26 @@ export const PUT = withAuth(async (request, session, context) => {
       updateData.options = options;
     }
 
+    // Detect an unambiguous option rename for SELECT templates and cascade it.
+    const rename =
+      options !== undefined && existing.type === 'SELECT'
+        ? detectOptionRename(existing.options, options)
+        : null;
+
     let template: typeof existing;
 
-    if (renames.length > 0) {
-      // Wrap in a transaction to cascade option renames
+    if (rename !== null) {
+      // Wrap in a transaction to cascade the option rename
       template = await prisma.$transaction(async (tx) => {
         const updated = await tx.customFieldTemplate.update({
           where: { id },
           data: updateData,
         });
 
-        for (const { from, to } of renames) {
-          await tx.personCustomFieldValue.updateMany({
-            where: { templateId: id, value: from },
-            data: { value: to },
-          });
-        }
+        await tx.personCustomFieldValue.updateMany({
+          where: { templateId: id, value: rename.from },
+          data: { value: rename.to },
+        });
 
         return updated;
       });

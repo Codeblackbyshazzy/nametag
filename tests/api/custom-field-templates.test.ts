@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Prisma } from '@prisma/client';
 
 // Use vi.hoisted to create mocks before hoisting
 const mocks = vi.hoisted(() => ({
@@ -177,7 +178,10 @@ describe('Custom Field Templates API', () => {
 
     it('returns 409 when Prisma throws P2002 (unique constraint on [userId, slug])', async () => {
       mocks.templateFindFirst.mockResolvedValue(null);
-      const p2002 = Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+      const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '5.0.0',
+      });
       mocks.templateCreate.mockRejectedValue(p2002);
 
       const request = new Request('http://localhost/api/custom-field-templates', {
@@ -294,7 +298,7 @@ describe('Custom Field Templates API', () => {
       expect(body.error).toBe('Validation failed');
     });
 
-    it('cascades option renames for SELECT templates inside a transaction', async () => {
+    it('renames cascade when one option swapped for another', async () => {
       const existing = {
         id: 'tpl-1',
         userId: 'user-123',
@@ -353,6 +357,130 @@ describe('Custom Field Templates API', () => {
           where: expect.objectContaining({ value: 'omnivore' }),
         })
       );
+    });
+
+    it('rename + add in same request does not cascade (ambiguous — 1 removed, 2 added)', async () => {
+      // When one option is removed and two new ones appear, it is ambiguous which
+      // added option represents the rename target. The cascade is skipped to avoid
+      // silently mis-routing existing person values. The old positional approach
+      // also dropped the rename here (length mismatch), but for the wrong reason.
+      const existing = {
+        id: 'tpl-1',
+        userId: 'user-123',
+        name: 'Diet',
+        slug: 'diet',
+        type: 'SELECT',
+        options: ['vegan', 'omnivore'],
+        order: 0,
+        deletedAt: null,
+      };
+
+      const updated = { ...existing, options: ['plant-based', 'omnivore', 'pescatarian'] };
+
+      mocks.templateFindFirst.mockResolvedValue(existing);
+      mocks.templateUpdate.mockResolvedValue(updated);
+
+      const request = new Request('http://localhost/api/custom-field-templates/tpl-1', {
+        method: 'PUT',
+        body: JSON.stringify({ options: ['plant-based', 'omnivore', 'pescatarian'] }),
+        headers: { 'content-type': 'application/json' },
+      });
+      const context = { params: Promise.resolve({ id: 'tpl-1' }) };
+      const response = await PUT(request, context);
+
+      expect(response.status).toBe(200);
+      expect(mocks.transaction).not.toHaveBeenCalled();
+      expect(mocks.personCustomFieldValueUpdateMany).not.toHaveBeenCalled();
+    });
+
+    it('pure add does not cascade', async () => {
+      const existing = {
+        id: 'tpl-1',
+        userId: 'user-123',
+        name: 'Diet',
+        slug: 'diet',
+        type: 'SELECT',
+        options: ['vegan', 'omnivore'],
+        order: 0,
+        deletedAt: null,
+      };
+
+      const updated = { ...existing, options: ['vegan', 'omnivore', 'pescatarian'] };
+
+      mocks.templateFindFirst.mockResolvedValue(existing);
+      mocks.templateUpdate.mockResolvedValue(updated);
+
+      const request = new Request('http://localhost/api/custom-field-templates/tpl-1', {
+        method: 'PUT',
+        body: JSON.stringify({ options: ['vegan', 'omnivore', 'pescatarian'] }),
+        headers: { 'content-type': 'application/json' },
+      });
+      const context = { params: Promise.resolve({ id: 'tpl-1' }) };
+      const response = await PUT(request, context);
+
+      expect(response.status).toBe(200);
+      expect(mocks.transaction).not.toHaveBeenCalled();
+      expect(mocks.personCustomFieldValueUpdateMany).not.toHaveBeenCalled();
+    });
+
+    it('pure remove does not cascade and does not error', async () => {
+      const existing = {
+        id: 'tpl-1',
+        userId: 'user-123',
+        name: 'Diet',
+        slug: 'diet',
+        type: 'SELECT',
+        options: ['vegan', 'omnivore'],
+        order: 0,
+        deletedAt: null,
+      };
+
+      const updated = { ...existing, options: ['omnivore'] };
+
+      mocks.templateFindFirst.mockResolvedValue(existing);
+      mocks.templateUpdate.mockResolvedValue(updated);
+
+      const request = new Request('http://localhost/api/custom-field-templates/tpl-1', {
+        method: 'PUT',
+        body: JSON.stringify({ options: ['omnivore'] }),
+        headers: { 'content-type': 'application/json' },
+      });
+      const context = { params: Promise.resolve({ id: 'tpl-1' }) };
+      const response = await PUT(request, context);
+
+      expect(response.status).toBe(200);
+      expect(mocks.transaction).not.toHaveBeenCalled();
+      expect(mocks.personCustomFieldValueUpdateMany).not.toHaveBeenCalled();
+    });
+
+    it('ambiguous multi-rename does not cascade', async () => {
+      const existing = {
+        id: 'tpl-1',
+        userId: 'user-123',
+        name: 'Diet',
+        slug: 'diet',
+        type: 'SELECT',
+        options: ['vegan', 'omnivore'],
+        order: 0,
+        deletedAt: null,
+      };
+
+      const updated = { ...existing, options: ['plant-based', 'meat-eater'] };
+
+      mocks.templateFindFirst.mockResolvedValue(existing);
+      mocks.templateUpdate.mockResolvedValue(updated);
+
+      const request = new Request('http://localhost/api/custom-field-templates/tpl-1', {
+        method: 'PUT',
+        body: JSON.stringify({ options: ['plant-based', 'meat-eater'] }),
+        headers: { 'content-type': 'application/json' },
+      });
+      const context = { params: Promise.resolve({ id: 'tpl-1' }) };
+      const response = await PUT(request, context);
+
+      expect(response.status).toBe(200);
+      expect(mocks.transaction).not.toHaveBeenCalled();
+      expect(mocks.personCustomFieldValueUpdateMany).not.toHaveBeenCalled();
     });
   });
 

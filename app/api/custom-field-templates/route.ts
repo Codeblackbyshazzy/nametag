@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { customFieldTemplateCreateSchema, validateRequest } from '@/lib/validations';
 import { apiResponse, handleApiError, parseRequestBody, withAuth } from '@/lib/api-utils';
@@ -83,12 +84,7 @@ export const POST = withAuth(async (request, session) => {
 
     return apiResponse.created({ template });
   } catch (error) {
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      (error as Record<string, unknown>).code === 'P2002'
-    ) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return apiResponse.error('A custom field with this name already exists', 409);
     }
     return handleApiError(error, 'custom-field-templates-create');

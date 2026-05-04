@@ -17,6 +17,7 @@ export default function DeleteCustomFieldDialog({
   onCancel,
 }: DeleteCustomFieldDialogProps) {
   const t = useTranslations('customFields.delete');
+  const tErrors = useTranslations('customFields.errors');
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,11 +34,11 @@ export default function DeleteCustomFieldDialog({
         onConfirm();
       } else {
         const data = (await res.json()) as { error?: string };
-        setError(data.error ?? 'Something went wrong');
+        setError(data.error ?? tErrors('somethingWentWrong'));
         setIsDeleting(false);
       }
     } catch {
-      setError('Unable to connect to server');
+      setError(tErrors('cannotConnect'));
       setIsDeleting(false);
     }
   };

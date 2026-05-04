@@ -245,6 +245,7 @@ export async function getSubscriptionWithStatus(userId: string): Promise<{
     people: { current: number; limit: number; isUnlimited: boolean };
     groups: { current: number; limit: number; isUnlimited: boolean };
     reminders: { current: number; limit: number; isUnlimited: boolean };
+    customFieldTemplates: { current: number; limit: number; isUnlimited: boolean };
   };
 }> {
   const [subscription, usage] = await Promise.all([
@@ -285,6 +286,11 @@ export async function getSubscriptionWithStatus(userId: string): Promise<{
         current: usage.reminders,
         limit: TIER_LIMITS[tier].maxReminders,
         isUnlimited: isUnlimited(tier, 'reminders'),
+      },
+      customFieldTemplates: {
+        current: usage.customFieldTemplates,
+        limit: TIER_LIMITS[tier].maxCustomFieldTemplates,
+        isUnlimited: isUnlimited(tier, 'customFieldTemplates'),
       },
     },
   };

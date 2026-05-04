@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   validateRawValue,
-  formatValueForDisplay,
   isEmptyRawValue,
 } from '../../lib/customFields/values';
 
@@ -60,25 +59,6 @@ describe('validateRawValue', () => {
       ok: false,
       error: 'NOT_IN_OPTIONS',
     });
-  });
-});
-
-describe('formatValueForDisplay', () => {
-  it('returns text as-is for TEXT', () => {
-    expect(formatValueForDisplay('TEXT', 'hello')).toBe('hello');
-  });
-
-  it('returns the number string for NUMBER', () => {
-    expect(formatValueForDisplay('NUMBER', '42')).toBe('42');
-  });
-
-  it('returns the raw value as-is for BOOLEAN', () => {
-    expect(formatValueForDisplay('BOOLEAN', 'true')).toBe('true');
-    expect(formatValueForDisplay('BOOLEAN', 'false')).toBe('false');
-  });
-
-  it('returns the option string for SELECT', () => {
-    expect(formatValueForDisplay('SELECT', 'vegan')).toBe('vegan');
   });
 });
 

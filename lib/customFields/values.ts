@@ -37,15 +37,3 @@ export function validateRawValue(
   }
 }
 
-export function formatValueForDisplay(type: CustomFieldType, raw: string): string {
-  switch (type) {
-    case 'TEXT':
-    case 'NUMBER':
-    case 'SELECT':
-    case 'BOOLEAN':
-      return raw;
-    default:
-      const _exhaustive: never = type;
-      return _exhaustive;
-  }
-}

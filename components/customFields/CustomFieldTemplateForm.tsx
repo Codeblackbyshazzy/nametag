@@ -28,6 +28,7 @@ export default function CustomFieldTemplateForm({
   onCancel,
 }: CustomFieldTemplateFormProps) {
   const t = useTranslations('customFields.form');
+  const tErrors = useTranslations('customFields.errors');
 
   const [name, setName] = useState(template?.name ?? '');
   const [type, setType] = useState<CustomFieldType>(template?.type ?? 'TEXT');
@@ -80,10 +81,10 @@ export default function CustomFieldTemplateForm({
         onSaved();
       } else {
         const data = (await res.json()) as { error?: string };
-        setError(data.error ?? 'Something went wrong');
+        setError(data.error ?? tErrors('somethingWentWrong'));
       }
     } catch {
-      setError('Unable to connect to server');
+      setError(tErrors('cannotConnect'));
     } finally {
       setIsSaving(false);
     }
@@ -187,7 +188,7 @@ export default function CustomFieldTemplateForm({
           disabled={isSaving}
           className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors disabled:opacity-50"
         >
-          {isSaving ? '...' : t('saveButton')}
+          {isSaving ? t('savingButton') : t('saveButton')}
         </button>
         <button
           type="button"

@@ -96,12 +96,16 @@ export const PUT = withAuth(async (request, session, context) => {
         ? detectOptionRename(existing.options, options)
         : null;
 
-    let template: typeof existing;
+    let template: Awaited<ReturnType<typeof prisma.customFieldTemplate.update<{
+      where: { id: string };
+      data: { name?: string; options?: string[] };
+      include: { _count: { select: { values: true } } };
+    }>>>;
 
     if (rename !== null) {
       // Wrap in a transaction to cascade the option rename
-      template = await prisma.$transaction(async (tx) => {
-        const updated = await tx.customFieldTemplate.update({
+      await prisma.$transaction(async (tx) => {
+        await tx.customFieldTemplate.update({
           where: { id },
           data: updateData,
         });
@@ -110,13 +114,24 @@ export const PUT = withAuth(async (request, session, context) => {
           where: { templateId: id, value: rename.from },
           data: { value: rename.to },
         });
-
-        return updated;
       });
+
+      // Reload with _count after transaction
+      const reloaded = await prisma.customFieldTemplate.findFirst({
+        where: { id, userId: session.user.id, deletedAt: null },
+        include: { _count: { select: { values: true } } },
+      });
+
+      if (!reloaded) {
+        return apiResponse.notFound('Custom field template not found');
+      }
+
+      template = reloaded;
     } else {
       template = await prisma.customFieldTemplate.update({
         where: { id },
         data: updateData,
+        include: { _count: { select: { values: true } } },
       });
     }
 

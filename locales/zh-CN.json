@@ -440,6 +440,7 @@
       "people": "联系人",
       "groups": "分组",
       "reminders": "提醒",
+      "customFields": "自定义字段",
       "havePromoCode": "有促销代码吗？",
       "promoCode": "促销代码",
       "promoCodePlaceholder": "输入代码",
@@ -637,6 +638,7 @@
       "addOption": "添加选项",
       "removeOption": "删除",
       "saveButton": "保存",
+      "savingButton": "保存中...",
       "cancelButton": "取消",
       "deleteButton": "删除"
     },
@@ -652,7 +654,10 @@
       "notANumber": "必须为数字。",
       "notBoolean": "必须为是或否。",
       "notInOptions": "必须是列出的选项之一。",
-      "limitReached": "您当前的套餐最多可创建 {limit} 个自定义字段。"
+      "limitReached": "您当前的套餐最多可创建 {limit} 个自定义字段。",
+      "reorderFailed": "重新排序失败",
+      "somethingWentWrong": "出现错误",
+      "cannotConnect": "无法连接到服务器"
     },
     "person": {
       "sectionTitle": "自定义字段",
@@ -667,7 +672,14 @@
       "selectField": "选择字段",
       "applyButton": "应用",
       "clearLabel": "清除筛选",
-      "chipFormat": "{name}：{value}"
+      "chipFormat": "{name}：{value}",
+      "staleFilter": "筛选条件已失效 — 清除"
+    },
+    "row": {
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "edit": "编辑",
+      "delete": "删除"
     }
   },
   "dashboard": {

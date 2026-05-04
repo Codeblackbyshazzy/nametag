@@ -440,6 +440,7 @@
       "people": "Personer",
       "groups": "Grupper",
       "reminders": "Påminnelser",
+      "customFields": "Egendefinerte felt",
       "havePromoCode": "Har du en kampanjekode?",
       "promoCode": "Kampanjekode",
       "promoCodePlaceholder": "Skriv inn kode",
@@ -637,6 +638,7 @@
       "addOption": "Legg til alternativ",
       "removeOption": "Fjern",
       "saveButton": "Lagre",
+      "savingButton": "Lagrer...",
       "cancelButton": "Avbryt",
       "deleteButton": "Slett"
     },
@@ -652,7 +654,10 @@
       "notANumber": "Må være et tall.",
       "notBoolean": "Må være Ja eller Nei.",
       "notInOptions": "Må være ett av de listede alternativene.",
-      "limitReached": "Du kan opprette opptil {limit} egendefinert(e) felt med din nåværende plan."
+      "limitReached": "Du kan opprette opptil {limit} egendefinert(e) felt med din nåværende plan.",
+      "reorderFailed": "Omsortering mislyktes",
+      "somethingWentWrong": "Noe gikk galt",
+      "cannotConnect": "Kan ikke koble til serveren"
     },
     "person": {
       "sectionTitle": "Egendefinerte felt",
@@ -667,7 +672,14 @@
       "selectField": "Velg et felt",
       "applyButton": "Bruk",
       "clearLabel": "Fjern filter",
-      "chipFormat": "{name}: {value}"
+      "chipFormat": "{name}: {value}",
+      "staleFilter": "Filteret er ikke lenger gyldig — fjern"
+    },
+    "row": {
+      "moveUp": "Flytt opp",
+      "moveDown": "Flytt ned",
+      "edit": "Rediger",
+      "delete": "Slett"
     }
   },
   "dashboard": {

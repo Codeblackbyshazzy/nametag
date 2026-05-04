@@ -44,6 +44,7 @@ export default function CustomFieldsManager({
   usage,
 }: CustomFieldsManagerProps) {
   const t = useTranslations('customFields.settings');
+  const tErrors = useTranslations('customFields.errors');
   const router = useRouter();
   const [templates, setTemplates] = useState<TemplateWithCount[]>(initialTemplates);
   const [mode, setMode] = useState<Mode>({ kind: 'idle' });
@@ -88,12 +89,12 @@ export default function CustomFieldsManager({
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        setReorderError(data.error ?? 'Failed to reorder');
+        setReorderError(data.error ?? tErrors('reorderFailed'));
       } else {
         router.refresh();
       }
     } catch {
-      setReorderError('Failed to reorder');
+      setReorderError(tErrors('reorderFailed'));
     }
   };
 

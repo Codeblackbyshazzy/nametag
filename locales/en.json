@@ -440,6 +440,7 @@
       "people": "People",
       "groups": "Groups",
       "reminders": "Reminders",
+      "customFields": "Custom fields",
       "havePromoCode": "Have a Promotion Code?",
       "promoCode": "Promotion Code",
       "promoCodePlaceholder": "Enter code",
@@ -637,6 +638,7 @@
       "addOption": "Add option",
       "removeOption": "Remove",
       "saveButton": "Save",
+      "savingButton": "Saving...",
       "cancelButton": "Cancel",
       "deleteButton": "Delete"
     },
@@ -652,7 +654,10 @@
       "notANumber": "Must be a number.",
       "notBoolean": "Must be Yes or No.",
       "notInOptions": "Must be one of the listed options.",
-      "limitReached": "You can create up to {limit} custom field(s) on your current plan."
+      "limitReached": "You can create up to {limit} custom field(s) on your current plan.",
+      "reorderFailed": "Failed to reorder",
+      "somethingWentWrong": "Something went wrong",
+      "cannotConnect": "Unable to connect to server"
     },
     "person": {
       "sectionTitle": "Custom fields",
@@ -667,7 +672,14 @@
       "selectField": "Select a field",
       "applyButton": "Apply",
       "clearLabel": "Clear filter",
-      "chipFormat": "{name}: {value}"
+      "chipFormat": "{name}: {value}",
+      "staleFilter": "Filter no longer valid — clear"
+    },
+    "row": {
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "edit": "Edit",
+      "delete": "Delete"
     }
   },
   "dashboard": {

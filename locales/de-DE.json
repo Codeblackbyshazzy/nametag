@@ -440,6 +440,7 @@
       "people": "Personen",
       "groups": "Gruppen",
       "reminders": "Erinnerungen",
+      "customFields": "Benutzerdefinierte Felder",
       "havePromoCode": "Hast du einen Rabattcode?",
       "promoCode": "Rabattcode",
       "promoCodePlaceholder": "Code eingeben",
@@ -637,6 +638,7 @@
       "addOption": "Option hinzufügen",
       "removeOption": "Entfernen",
       "saveButton": "Speichern",
+      "savingButton": "Wird gespeichert...",
       "cancelButton": "Abbrechen",
       "deleteButton": "Löschen"
     },
@@ -652,7 +654,10 @@
       "notANumber": "Muss eine Zahl sein.",
       "notBoolean": "Muss Ja oder Nein sein.",
       "notInOptions": "Muss eine der aufgelisteten Optionen sein.",
-      "limitReached": "Mit deinem aktuellen Plan kannst du bis zu {limit} benutzerdefinierte(s) Feld(er) erstellen."
+      "limitReached": "Mit deinem aktuellen Plan kannst du bis zu {limit} benutzerdefinierte(s) Feld(er) erstellen.",
+      "reorderFailed": "Reihenfolge konnte nicht geändert werden",
+      "somethingWentWrong": "Etwas ist schiefgelaufen",
+      "cannotConnect": "Verbindung zum Server nicht möglich"
     },
     "person": {
       "sectionTitle": "Benutzerdefinierte Felder",
@@ -667,7 +672,14 @@
       "selectField": "Feld auswählen",
       "applyButton": "Anwenden",
       "clearLabel": "Filter zurücksetzen",
-      "chipFormat": "{name}: {value}"
+      "chipFormat": "{name}: {value}",
+      "staleFilter": "Filter nicht mehr gültig — zurücksetzen"
+    },
+    "row": {
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
     }
   },
   "dashboard": {

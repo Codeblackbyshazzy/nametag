@@ -440,6 +440,7 @@
       "people": "人",
       "groups": "グループ",
       "reminders": "リマインダー",
+      "customFields": "カスタムフィールド",
       "havePromoCode": "プロモーションコードをお持ちですか？",
       "promoCode": "プロモーションコード",
       "promoCodePlaceholder": "コードを入力",
@@ -637,6 +638,7 @@
       "addOption": "選択肢を追加",
       "removeOption": "削除",
       "saveButton": "保存",
+      "savingButton": "保存中...",
       "cancelButton": "キャンセル",
       "deleteButton": "削除"
     },
@@ -652,7 +654,10 @@
       "notANumber": "数値を入力してください。",
       "notBoolean": "「はい」または「いいえ」を入力してください。",
       "notInOptions": "一覧の選択肢のいずれかを選んでください。",
-      "limitReached": "現在のプランでは最大{limit}件のカスタムフィールドを作成できます。"
+      "limitReached": "現在のプランでは最大{limit}件のカスタムフィールドを作成できます。",
+      "reorderFailed": "並び替えに失敗しました",
+      "somethingWentWrong": "エラーが発生しました",
+      "cannotConnect": "サーバーに接続できません"
     },
     "person": {
       "sectionTitle": "カスタムフィールド",
@@ -667,7 +672,14 @@
       "selectField": "フィールドを選択",
       "applyButton": "適用",
       "clearLabel": "フィルターをクリア",
-      "chipFormat": "{name}：{value}"
+      "chipFormat": "{name}：{value}",
+      "staleFilter": "フィルターが無効です — クリア"
+    },
+    "row": {
+      "moveUp": "上へ移動",
+      "moveDown": "下へ移動",
+      "edit": "編集",
+      "delete": "削除"
     }
   },
   "dashboard": {

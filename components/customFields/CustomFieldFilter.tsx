@@ -41,6 +41,18 @@ export default function CustomFieldFilter({ templates, current, onChange }: Prop
         </button>
       );
     }
+    // Template was soft-deleted — show stale filter chip so user can clear it
+    return (
+      <button
+        type="button"
+        onClick={() => onChange('')}
+        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-amber-500/40 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20"
+        title={t('filter.clearLabel')}
+      >
+        <span>{t('filter.staleFilter')}</span>
+        <span aria-hidden>✕</span>
+      </button>
+    );
   }
 
   // Template picker (after user clicked More filters and selected a template)

@@ -39,6 +39,7 @@ export default function CustomFieldTemplateRow({
 }: CustomFieldTemplateRowProps) {
   const tSettings = useTranslations('customFields.settings');
   const tForm = useTranslations('customFields.form');
+  const tRow = useTranslations('customFields.row');
 
   if (isEditing) {
     return (
@@ -61,7 +62,7 @@ export default function CustomFieldTemplateRow({
           type="button"
           onClick={onMoveUp}
           disabled={!canMoveUp}
-          aria-label="Move up"
+          aria-label={tRow('moveUp')}
           className="p-0.5 text-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +73,7 @@ export default function CustomFieldTemplateRow({
           type="button"
           onClick={onMoveDown}
           disabled={!canMoveDown}
-          aria-label="Move down"
+          aria-label={tRow('moveDown')}
           className="p-0.5 text-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +100,7 @@ export default function CustomFieldTemplateRow({
         <button
           type="button"
           onClick={onEdit}
-          aria-label="Edit"
+          aria-label={tRow('edit')}
           className="p-1.5 text-muted hover:text-foreground hover:bg-surface-elevated rounded transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +115,7 @@ export default function CustomFieldTemplateRow({
         <button
           type="button"
           onClick={onDelete}
-          aria-label="Delete"
+          aria-label={tRow('delete')}
           className="p-1.5 text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-surface-elevated rounded transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

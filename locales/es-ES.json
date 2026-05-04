@@ -440,6 +440,7 @@
       "people": "Personas",
       "groups": "Grupos",
       "reminders": "Recordatorios",
+      "customFields": "Campos personalizados",
       "havePromoCode": "¿Tienes un Código de Promoción?",
       "promoCode": "Código promocional",
       "promoCodePlaceholder": "Ingresa código",
@@ -637,6 +638,7 @@
       "addOption": "Añadir opción",
       "removeOption": "Eliminar",
       "saveButton": "Guardar",
+      "savingButton": "Guardando...",
       "cancelButton": "Cancelar",
       "deleteButton": "Eliminar"
     },
@@ -652,7 +654,10 @@
       "notANumber": "Debe ser un número.",
       "notBoolean": "Debe ser Sí o No.",
       "notInOptions": "Debe ser una de las opciones disponibles.",
-      "limitReached": "Puedes crear hasta {limit} campo(s) personalizado(s) con tu plan actual."
+      "limitReached": "Puedes crear hasta {limit} campo(s) personalizado(s) con tu plan actual.",
+      "reorderFailed": "No se pudo reordenar",
+      "somethingWentWrong": "Algo salió mal",
+      "cannotConnect": "No se puede conectar al servidor"
     },
     "person": {
       "sectionTitle": "Campos personalizados",
@@ -667,7 +672,14 @@
       "selectField": "Seleccionar un campo",
       "applyButton": "Aplicar",
       "clearLabel": "Limpiar filtro",
-      "chipFormat": "{name}: {value}"
+      "chipFormat": "{name}: {value}",
+      "staleFilter": "El filtro ya no es válido — limpiar"
+    },
+    "row": {
+      "moveUp": "Mover arriba",
+      "moveDown": "Mover abajo",
+      "edit": "Editar",
+      "delete": "Eliminar"
     }
   },
   "dashboard": {

@@ -664,7 +664,7 @@
       "booleanYes": "Ja",
       "booleanNo": "Nein",
       "booleanNotSet": "Nicht gesetzt",
-      "selectEmpty": "—",
+      "selectEmpty": "-",
       "valueOutOfOptions": "Dieser Wert ist nicht mehr in den Optionen des Felds."
     },
     "filter": {
@@ -673,7 +673,7 @@
       "applyButton": "Anwenden",
       "clearLabel": "Filter zurücksetzen",
       "chipFormat": "{name}: {value}",
-      "staleFilter": "Filter nicht mehr gültig — zurücksetzen"
+      "staleFilter": "Filter nicht mehr gültig. Zurücksetzen"
     },
     "row": {
       "moveUp": "Nach oben",
@@ -1779,7 +1779,7 @@
     "filterByPerson": "Nach Person filtern",
     "allPeople": "Alle Personen",
     "noEntries": "Noch keine Tagebucheinträge",
-    "noEntriesDescription": "Ein Kaffee mit Freunden, ein Familienessen, ein unverhofftes Wiedersehen — halte die Momente fest, die zahlen.",
+    "noEntriesDescription": "Ein Kaffee mit Freunden, ein Familienessen, ein unverhofftes Wiedersehen. Halte die Momente fest, die zählen.",
     "writeFirstEntry": "Schreib deinen ersten Eintrag",
     "form": {
       "titleLabel": "Titel",

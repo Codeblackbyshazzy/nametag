@@ -616,7 +616,7 @@
   "customFields": {
     "settings": {
       "title": "自定义字段",
-      "description": "定义带类型的自定义字段并应用到所有联系人。用它们过滤您的人脉——例如「谁是素食者」或「谁有宠物」。",
+      "description": "定义带类型的自定义字段并应用到所有联系人。用它们过滤您的人脉,比如「谁是素食者」或「谁有宠物」。",
       "newButton": "新建字段",
       "emptyTitle": "暂无自定义字段",
       "emptyDescription": "添加饮食限制、爱好或宠物等字段，并用它们来筛选您的联系人。",
@@ -664,7 +664,7 @@
       "booleanYes": "是",
       "booleanNo": "否",
       "booleanNotSet": "未设置",
-      "selectEmpty": "—",
+      "selectEmpty": "-",
       "valueOutOfOptions": "此值已不在该字段的选项列表中。"
     },
     "filter": {
@@ -673,7 +673,7 @@
       "applyButton": "应用",
       "clearLabel": "清除筛选",
       "chipFormat": "{name}：{value}",
-      "staleFilter": "筛选条件已失效 — 清除"
+      "staleFilter": "筛选条件已失效。清除"
     },
     "row": {
       "moveUp": "上移",
@@ -1779,7 +1779,7 @@
     "filterByPerson": "按人物筛选",
     "allPeople": "所有人",
     "noEntries": "暂无日记条目",
-    "noEntriesDescription": "与朋友喝咖啡、家庭聚餐、与老友重逢——记录那些重要的时刻。",
+    "noEntriesDescription": "与朋友喝咖啡、家庭聚餐、与老友重逢。记录那些重要的时刻。",
     "writeFirstEntry": "写下第一条记录",
     "form": {
       "titleLabel": "标题",

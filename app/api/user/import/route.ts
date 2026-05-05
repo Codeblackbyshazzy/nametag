@@ -150,7 +150,7 @@ export const POST = withAuth(async (request, session) => {
             if (newTemplateCount > remainingSlots) {
               return apiResponse.forbidden(
                 `Importing this file would exceed your custom field limit of ${templatesCheck.limit}. ` +
-                `You have room for ${remainingSlots} more — upgrade your plan to import more.`
+                `You have room for ${remainingSlots} more. Upgrade your plan to import more.`
               );
             }
           }

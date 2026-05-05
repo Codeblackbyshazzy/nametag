@@ -616,7 +616,7 @@
   "customFields": {
     "settings": {
       "title": "Custom fields",
-      "description": "Define your own typed fields and apply them to all your people. Use them to filter your network — like \"who's vegetarian\" or \"who has pets.\"",
+      "description": "Define your own typed fields and apply them to all your people. Use them to filter your network, like \"who's vegetarian\" or \"who has pets.\"",
       "newButton": "New field",
       "emptyTitle": "No custom fields yet",
       "emptyDescription": "Add fields like dietary restrictions, hobbies, or pets, and use them to filter your people.",
@@ -664,7 +664,7 @@
       "booleanYes": "Yes",
       "booleanNo": "No",
       "booleanNotSet": "Not set",
-      "selectEmpty": "—",
+      "selectEmpty": "-",
       "valueOutOfOptions": "This value is no longer in the field's options."
     },
     "filter": {
@@ -673,7 +673,7 @@
       "applyButton": "Apply",
       "clearLabel": "Clear filter",
       "chipFormat": "{name}: {value}",
-      "staleFilter": "Filter no longer valid — clear"
+      "staleFilter": "Filter no longer valid. Clear"
     },
     "row": {
       "moveUp": "Move up",
@@ -1775,7 +1775,7 @@
     "filterByPerson": "Filter by person",
     "allPeople": "All people",
     "noEntries": "No journal entries yet",
-    "noEntriesDescription": "A coffee catch-up, a family dinner, running into an old friend — capture the moments that matter.",
+    "noEntriesDescription": "A coffee catch-up, a family dinner, running into an old friend. Capture the moments that matter.",
     "writeFirstEntry": "Write your first entry",
     "form": {
       "titleLabel": "Title",

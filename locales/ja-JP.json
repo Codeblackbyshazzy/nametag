@@ -664,7 +664,7 @@
       "booleanYes": "はい",
       "booleanNo": "いいえ",
       "booleanNotSet": "未設定",
-      "selectEmpty": "—",
+      "selectEmpty": "-",
       "valueOutOfOptions": "この値はフィールドの選択肢に含まれていません。"
     },
     "filter": {
@@ -673,7 +673,7 @@
       "applyButton": "適用",
       "clearLabel": "フィルターをクリア",
       "chipFormat": "{name}：{value}",
-      "staleFilter": "フィルターが無効です — クリア"
+      "staleFilter": "フィルターが無効です。クリア"
     },
     "row": {
       "moveUp": "上へ移動",
@@ -1779,7 +1779,7 @@
     "filterByPerson": "人物でフィルター",
     "allPeople": "すべての人物",
     "noEntries": "ジャーナルエントリーがまだありません",
-    "noEntriesDescription": "友人とのコーヒー、家族の夕食、旧友との再会 — 大切な瞬間を記録しましょう。",
+    "noEntriesDescription": "友人とのコーヒー、家族の夕食、旧友との再会。大切な瞬間を記録しましょう。",
     "writeFirstEntry": "最初のエントリーを書く",
     "form": {
       "titleLabel": "タイトル",

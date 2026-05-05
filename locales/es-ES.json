@@ -616,7 +616,7 @@
   "customFields": {
     "settings": {
       "title": "Campos personalizados",
-      "description": "Define tus propios campos con tipo y aplícalos a todas tus personas. Úsalos para filtrar tu red — como «quién es vegetariano» o «quién tiene mascotas».",
+      "description": "Define tus propios campos con tipo y aplícalos a todas tus personas. Úsalos para filtrar tu red, como «quién es vegetariano» o «quién tiene mascotas».",
       "newButton": "Nuevo campo",
       "emptyTitle": "Aún no hay campos personalizados",
       "emptyDescription": "Añade campos como restricciones dietéticas, aficiones o mascotas, y úsalos para filtrar tus personas.",
@@ -664,7 +664,7 @@
       "booleanYes": "Sí",
       "booleanNo": "No",
       "booleanNotSet": "Sin definir",
-      "selectEmpty": "—",
+      "selectEmpty": "-",
       "valueOutOfOptions": "Este valor ya no está en las opciones del campo."
     },
     "filter": {
@@ -673,7 +673,7 @@
       "applyButton": "Aplicar",
       "clearLabel": "Limpiar filtro",
       "chipFormat": "{name}: {value}",
-      "staleFilter": "El filtro ya no es válido — limpiar"
+      "staleFilter": "El filtro ya no es válido. Limpiar"
     },
     "row": {
       "moveUp": "Mover arriba",
@@ -1779,7 +1779,7 @@
     "filterByPerson": "Filtrar por persona",
     "allPeople": "Todas las personas",
     "noEntries": "Aún no hay entradas en el diario",
-    "noEntriesDescription": "Un cafe con amigos, una cena familiar, un reencuentro inesperado — captura los momentos que importan.",
+    "noEntriesDescription": "Un cafe con amigos, una cena familiar, un reencuentro inesperado. Captura los momentos que importan.",
     "writeFirstEntry": "Escribe tu primera entrada",
     "form": {
       "titleLabel": "Título",

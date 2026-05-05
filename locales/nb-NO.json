@@ -616,7 +616,7 @@
   "customFields": {
     "settings": {
       "title": "Egendefinerte felt",
-      "description": "Definer egne typede felt og bruk dem på alle personene dine. Filtrer nettverket ditt — f.eks. «hvem er vegetarianer» eller «hvem har kjæledyr».",
+      "description": "Definer egne typede felt og bruk dem på alle personene dine. Filtrer nettverket ditt, f.eks. «hvem er vegetarianer» eller «hvem har kjæledyr».",
       "newButton": "Nytt felt",
       "emptyTitle": "Ingen egendefinerte felt ennå",
       "emptyDescription": "Legg til felt som kostholdsbegrensninger, hobbyer eller kjæledyr, og bruk dem til å filtrere personene dine.",
@@ -664,7 +664,7 @@
       "booleanYes": "Ja",
       "booleanNo": "Nei",
       "booleanNotSet": "Ikke angitt",
-      "selectEmpty": "—",
+      "selectEmpty": "-",
       "valueOutOfOptions": "Denne verdien er ikke lenger blant feltets alternativer."
     },
     "filter": {
@@ -673,7 +673,7 @@
       "applyButton": "Bruk",
       "clearLabel": "Fjern filter",
       "chipFormat": "{name}: {value}",
-      "staleFilter": "Filteret er ikke lenger gyldig — fjern"
+      "staleFilter": "Filteret er ikke lenger gyldig. Fjern"
     },
     "row": {
       "moveUp": "Flytt opp",
@@ -1779,7 +1779,7 @@
     "filterByPerson": "Filtrer etter person",
     "allPeople": "Alle personer",
     "noEntries": "Ingen journaloppføringer ennå",
-    "noEntriesDescription": "En kaffe med venner, en familiemiddag, et uventet gjensyn — ta vare pa oyeblikkene som betyr noe.",
+    "noEntriesDescription": "En kaffe med venner, en familiemiddag, et uventet gjensyn. Ta vare på øyeblikkene som betyr noe.",
     "writeFirstEntry": "Skriv din første oppføring",
     "form": {
       "titleLabel": "Tittel",

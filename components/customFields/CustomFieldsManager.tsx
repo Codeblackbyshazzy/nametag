@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { CustomFieldType } from '@prisma/client';
@@ -49,6 +49,12 @@ export default function CustomFieldsManager({
   const [templates, setTemplates] = useState<TemplateWithCount[]>(initialTemplates);
   const [mode, setMode] = useState<Mode>({ kind: 'idle' });
   const [reorderError, setReorderError] = useState<string | null>(null);
+
+  // Re-sync local state whenever the server-refreshed prop changes (after
+  // create/edit/delete/reorder router.refresh() lands new data).
+  useEffect(() => {
+    setTemplates(initialTemplates);
+  }, [initialTemplates]);
 
   const canCreate = usage === null || usage.allowed;
 

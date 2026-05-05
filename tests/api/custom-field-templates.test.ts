@@ -539,7 +539,7 @@ describe('Custom Field Templates API', () => {
   // ─── PUT /api/custom-field-templates/reorder ────────────────────────────────
 
   describe('PUT /api/custom-field-templates/reorder', () => {
-    it('reorders templates and returns 200 with { success: true }', async () => {
+    it('reorders templates and returns 200 with { success: true } (full list submitted)', async () => {
       const id1 = 'c1111111111111111111111a';
       const id2 = 'c2222222222222222222222a';
       const id3 = 'c3333333333333333333333a';
@@ -548,13 +548,12 @@ describe('Custom Field Templates API', () => {
       const b = { id: id2, userId: 'user-123' };
       const c = { id: id3, userId: 'user-123' };
 
-      // Mock findMany returns all 3 ids owned by user
+      // Mock findMany returns all 3 active templates (full set)
       mocks.templateFindMany.mockResolvedValue([a, b, c]);
 
       // Mock transaction with update calls
       mocks.transaction.mockImplementation(
-        async (updates: Array<any>) => {
-          // Simulate transaction executing updates
+        async (updates: Array<unknown>) => {
           return Promise.all(updates.map((u) => u));
         }
       );
@@ -571,11 +570,10 @@ describe('Custom Field Templates API', () => {
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
 
-      // Verify ownership check was called
+      // Verify active templates were loaded for ownership+completeness check
       expect(mocks.templateFindMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            id: { in: [id3, id1, id2] },
             userId: 'user-123',
             deletedAt: null,
           },
@@ -585,18 +583,19 @@ describe('Custom Field Templates API', () => {
 
       // Verify transaction was called with 3 update calls
       expect(mocks.transaction).toHaveBeenCalled();
-      const transactionArg = (mocks.transaction as any).mock.calls[0][0];
+      const transactionArg = (mocks.transaction as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0];
       expect(transactionArg).toHaveLength(3);
     });
 
-    it('returns 400 when not all ids are owned by the user', async () => {
+    it('returns 400 when a subset of active template ids is submitted', async () => {
       const id1 = 'c1111111111111111111111a';
       const id2 = 'c2222222222222222222222a';
+      const id3 = 'c3333333333333333333333a';
 
-      const a = { id: id1, userId: 'user-123' };
-
-      // Mock findMany returns only 1 id (not all 2)
-      mocks.templateFindMany.mockResolvedValue([a]);
+      // User has 3 active templates but submits only 2
+      mocks.templateFindMany.mockResolvedValue([
+        { id: id1 }, { id: id2 }, { id: id3 },
+      ]);
 
       const request = new Request('http://localhost/api/custom-field-templates/reorder', {
         method: 'PUT',
@@ -608,9 +607,52 @@ describe('Custom Field Templates API', () => {
       const body = await response.json();
 
       expect(response.status).toBe(400);
-      expect(body.error).toBe('Invalid id list');
+      expect(body.error).toBe('Reorder must include all active templates');
+      expect(mocks.transaction).not.toHaveBeenCalled();
+    });
 
-      // Verify update was NOT called
+    it('returns 400 when extra or foreign ids are submitted', async () => {
+      const id1 = 'c1111111111111111111111a';
+      const id2 = 'c2222222222222222222222a';
+      const foreignId = 'cforeign111111111111111a';
+
+      // User has 2 active templates but submits 2 with one foreign id
+      mocks.templateFindMany.mockResolvedValue([
+        { id: id1 }, { id: id2 },
+      ]);
+
+      const request = new Request('http://localhost/api/custom-field-templates/reorder', {
+        method: 'PUT',
+        body: JSON.stringify({ ids: [id1, foreignId] }),
+        headers: { 'content-type': 'application/json' },
+      });
+
+      const response = await reorderPUT(request);
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.error).toBe('Reorder must include all active templates');
+      expect(mocks.transaction).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when ids that do not belong to the user are submitted', async () => {
+      const id1 = 'c1111111111111111111111a';
+      const foreignId = 'cforeign111111111111111a';
+
+      // User has 1 active template; submitted list has 2 (one foreign)
+      mocks.templateFindMany.mockResolvedValue([{ id: id1 }]);
+
+      const request = new Request('http://localhost/api/custom-field-templates/reorder', {
+        method: 'PUT',
+        body: JSON.stringify({ ids: [id1, foreignId] }),
+        headers: { 'content-type': 'application/json' },
+      });
+
+      const response = await reorderPUT(request);
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.error).toBe('Reorder must include all active templates');
       expect(mocks.transaction).not.toHaveBeenCalled();
     });
 

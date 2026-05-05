@@ -4,6 +4,7 @@ import { apiResponse, handleApiError, MAX_REQUEST_SIZE, parseRequestBody, withAu
 import { canCreateResource, getUserUsage } from '@/lib/billing';
 import { isSaasMode } from '@/lib/features';
 import { formatFullName } from '@/lib/nameUtils';
+import { validateRawValue } from '@/lib/customFields/values';
 
 import { z } from 'zod';
 
@@ -135,6 +136,8 @@ export const POST = withAuth(async (request, session) => {
     const groupIdMap = new Map<string, string>();
     const personIdMap = new Map<string, string>();
     const relationshipTypeIdMap = new Map<string, string>();
+    // Maps slug → templateId for the values import phase
+    const slugToTemplateId = new Map<string, string>();
 
     // Support both old field name (customRelationshipTypes) and new field name (relationshipTypes)
     const importRelationshipTypes = data.relationshipTypes || data.customRelationshipTypes;
@@ -181,6 +184,33 @@ export const POST = withAuth(async (request, session) => {
             });
           }
         }
+      }
+    }
+
+    // 1b. Import custom field templates (tolerant of older exports)
+    for (const tpl of data.customFieldTemplates ?? []) {
+      // Look up by (userId, slug) — slug is stable across exports
+      const existing = await prisma.customFieldTemplate.findFirst({
+        where: { userId: session.user.id, slug: tpl.slug, deletedAt: null },
+        select: { id: true },
+      });
+
+      if (existing) {
+        // Reuse existing template; do NOT overwrite options/order to avoid clobbering user changes
+        slugToTemplateId.set(tpl.slug, existing.id);
+      } else {
+        const created = await prisma.customFieldTemplate.create({
+          data: {
+            userId: session.user.id,
+            name: tpl.name,
+            slug: tpl.slug,
+            type: tpl.type,
+            options: tpl.options ?? [],
+            order: tpl.order ?? 0,
+          },
+          select: { id: true },
+        });
+        slugToTemplateId.set(tpl.slug, created.id);
       }
     }
 
@@ -347,7 +377,35 @@ export const POST = withAuth(async (request, session) => {
       }
     }
 
-    // 5. Import journal entries
+    // 5. Import custom field values
+    for (const person of filteredData.people) {
+      const newPersonId = personIdMap.get(person.id);
+      if (!newPersonId) continue;
+
+      for (const cfv of person.customFieldValues ?? []) {
+        const templateId = slugToTemplateId.get(cfv.slug);
+        if (!templateId) continue; // slug not found — skip silently
+
+        // Look up the template to validate the value against its type
+        const template = await prisma.customFieldTemplate.findFirst({
+          where: { id: templateId, userId: session.user.id, deletedAt: null },
+          select: { type: true, options: true },
+        });
+        if (!template) continue;
+
+        const validation = validateRawValue(template.type, cfv.value, template.options);
+        if (!validation.ok) continue; // invalid value — skip silently
+
+        // Upsert the value honoring the [personId, templateId] unique constraint
+        await prisma.personCustomFieldValue.upsert({
+          where: { personId_templateId: { personId: newPersonId, templateId } },
+          create: { personId: newPersonId, templateId, value: cfv.value },
+          update: { value: cfv.value },
+        });
+      }
+    }
+
+    // 6. Import journal entries
     let journalEntriesImported = 0;
     if (data.journalEntries && data.journalEntries.length > 0) {
       const allPeople = await prisma.person.findMany({
@@ -403,6 +461,7 @@ export const POST = withAuth(async (request, session) => {
         people: personIdMap.size,
         relationshipTypes: relationshipTypeIdMap.size,
         journalEntries: journalEntriesImported,
+        customFieldTemplates: slugToTemplateId.size,
       },
     });
   } catch (error) {

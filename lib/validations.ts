@@ -460,6 +460,10 @@ export const importDataSchema = z.object({
       }).nullable().optional(),
       notes: z.string().nullable().optional(),
     })),
+    customFieldValues: z.array(z.object({
+      slug: z.string(),
+      value: z.string(),
+    })).optional(),
   })),
   // Support both old field name (customRelationshipTypes) and new field name (relationshipTypes)
   customRelationshipTypes: z.array(z.object({
@@ -482,6 +486,13 @@ export const importDataSchema = z.object({
     date: z.string(),
     body: z.string(),
     people: z.array(z.string()),
+  })).optional(),
+  customFieldTemplates: z.array(z.object({
+    name: z.string(),
+    slug: z.string(),
+    type: z.enum(['TEXT', 'NUMBER', 'BOOLEAN', 'SELECT']),
+    options: z.array(z.string()).optional(),
+    order: z.number().optional(),
   })).optional(),
 });
 

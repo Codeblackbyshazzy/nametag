@@ -33,7 +33,14 @@ CREATE TABLE "person_custom_field_values" (
 CREATE INDEX "custom_field_templates_userId_deletedAt_idx" ON "custom_field_templates"("userId", "deletedAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "custom_field_templates_userId_slug_key" ON "custom_field_templates"("userId", "slug");
+CREATE INDEX "custom_field_templates_userId_slug_idx" ON "custom_field_templates"("userId", "slug");
+
+-- CreateIndex
+-- Partial unique index: enforces uniqueness on (userId, slug) only for non-deleted rows.
+-- This lets users recreate a template with the same name after soft-deleting the previous one.
+CREATE UNIQUE INDEX "custom_field_templates_userId_slug_active_key"
+  ON "custom_field_templates"("userId", "slug")
+  WHERE "deletedAt" IS NULL;
 
 -- CreateIndex
 CREATE INDEX "person_custom_field_values_templateId_value_idx" ON "person_custom_field_values"("templateId", "value");

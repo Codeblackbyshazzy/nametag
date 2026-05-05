@@ -201,7 +201,7 @@ describe('Export API', () => {
       const body = await response.json();
 
       expect(response.status).toBe(200);
-      expect(body.version).toBe('1.0');
+      expect(body.version).toBe('1.1');
       expect(body.people).toHaveLength(3);
       expect(body.groups).toHaveLength(3);
       expect(body.relationshipTypes).toHaveLength(1);

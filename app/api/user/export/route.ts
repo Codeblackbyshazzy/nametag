@@ -163,7 +163,7 @@ export const GET = withAuth(async (request, session) => {
 
     // Build export data structure
     const exportData = {
-      version: '1.0',
+      version: '1.1',
       exportDate: new Date().toISOString(),
       user: {
         email: user?.email,

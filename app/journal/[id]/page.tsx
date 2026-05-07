@@ -65,6 +65,12 @@ export default async function JournalEntryDetailPage({
     month: 'long',
     day: 'numeric',
   });
+  const formattedTime = entry.hasTime
+    ? entry.date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })
+    : null;
+  const formattedDateLine = formattedTime
+    ? `${formattedDate} · ${formattedTime}`
+    : formattedDate;
 
   return (
     <div className="min-h-screen bg-background">
@@ -93,7 +99,7 @@ export default async function JournalEntryDetailPage({
                 <h1 className="text-3xl font-bold text-foreground mb-1">
                   {entry.title}
                 </h1>
-                <p className="text-sm text-muted">{formattedDate}</p>
+                <p className="text-sm text-muted">{formattedDateLine}</p>
               </div>
               <div className="flex gap-2">
                 <Button href={`/journal/${entry.id}/edit`} size="sm" variant="secondary">

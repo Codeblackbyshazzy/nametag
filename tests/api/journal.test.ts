@@ -142,6 +142,65 @@ describe('Journal API', () => {
       expect(data.entry).toEqual(expect.objectContaining({ title: 'Dinner with friends' }));
     });
 
+    it('should persist hasTime=true and the supplied UTC instant', async () => {
+      mocks.journalEntryCreate.mockResolvedValue({
+        id: 'entry-2',
+        title: 'Quick call with Maria',
+        date: new Date('2026-05-07T22:30:00.000Z'),
+        hasTime: true,
+        body: 'Caught up briefly.',
+        people: [],
+      });
+
+      const request = new Request('http://localhost/api/journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Quick call with Maria',
+          date: '2026-05-07T22:30:00.000Z',
+          hasTime: true,
+          body: 'Caught up briefly.',
+          personIds: [],
+          updateLastContact: false,
+        }),
+      });
+      const response = await POST(request);
+
+      expect(response.status).toBe(201);
+      const callArg = mocks.journalEntryCreate.mock.calls[0][0];
+      expect(callArg.data.hasTime).toBe(true);
+      expect(callArg.data.date).toEqual(new Date('2026-05-07T22:30:00.000Z'));
+    });
+
+    it('should persist hasTime=false and midnight UTC for date-only entries', async () => {
+      mocks.journalEntryCreate.mockResolvedValue({
+        id: 'entry-3',
+        title: 'Birthday',
+        date: new Date('2026-03-28T00:00:00.000Z'),
+        hasTime: false,
+        body: 'Family lunch.',
+        people: [],
+      });
+
+      const request = new Request('http://localhost/api/journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Birthday',
+          date: '2026-03-28',
+          body: 'Family lunch.',
+          personIds: [],
+          updateLastContact: false,
+        }),
+      });
+      const response = await POST(request);
+
+      expect(response.status).toBe(201);
+      const callArg = mocks.journalEntryCreate.mock.calls[0][0];
+      expect(callArg.data.hasTime).toBe(false);
+      expect(callArg.data.date).toEqual(new Date('2026-03-28T00:00:00.000Z'));
+    });
+
     it('should return 400 for missing title', async () => {
       const request = new Request('http://localhost/api/journal', {
         method: 'POST',

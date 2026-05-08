@@ -219,6 +219,7 @@ export const createPersonSchema = z.object({
   contactReminderInterval: z.number().int().min(1).max(99).nullable().optional(),
   contactReminderIntervalUnit: reminderIntervalUnitSchema.nullable().optional(),
   cardDavSyncEnabled: z.boolean().optional(),
+  cardDavDisplayName: z.string().max(200).nullable().optional(),
 
   // Multi-value vCard fields
   phoneNumbers: z.array(phoneNumberSchema).optional(),
@@ -420,6 +421,10 @@ export const updateNameOrderSchema = z.object({
 
 export const updateNameDisplayFormatSchema = z.object({
   nameDisplayFormat: z.enum(['FULL', 'NICKNAME_PREFERRED', 'SHORT']),
+});
+
+export const updateCardDavNameFormatSchema = z.object({
+  cardDavNameFormat: z.enum(['FULL', 'NICKNAME_PREFERRED', 'SHORT']),
 });
 
 export const updateGraphDisplaySchema = z.object({

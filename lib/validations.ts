@@ -423,10 +423,6 @@ export const updateNameDisplayFormatSchema = z.object({
   nameDisplayFormat: z.enum(['FULL', 'NICKNAME_PREFERRED', 'SHORT']),
 });
 
-export const updateCardDavNameFormatSchema = z.object({
-  cardDavNameFormat: z.enum(['FULL', 'NICKNAME_PREFERRED', 'SHORT']),
-});
-
 export const updateGraphDisplaySchema = z.object({
   graphMode: z.enum(['individuals', 'bubbles']),
 });

@@ -1055,4 +1055,111 @@ END:VCARD`;
       expect(parsed.emails).toHaveLength(1);
     });
   });
+
+  describe('FN field with cardDavNameFormat', () => {
+    function buildPerson(overrides: Partial<PersonWithRelations> = {}): PersonWithRelations {
+      return {
+        id: 'test-1',
+        userId: 'user-1',
+        name: 'Maria',
+        surname: 'Gonzalez',
+        middleName: null,
+        secondLastName: null,
+        nickname: 'Mom',
+        prefix: null,
+        suffix: null,
+        uid: 'test-uid',
+        organization: null,
+        jobTitle: null,
+        photo: null,
+        gender: null,
+        anniversary: null,
+        lastContact: null,
+        notes: null,
+        relationshipToUserId: null,
+        contactReminderEnabled: false,
+        contactReminderInterval: null,
+        contactReminderIntervalUnit: null,
+        lastContactReminderSent: null,
+        cardDavSyncEnabled: true,
+        cardDavDisplayName: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+        phoneNumbers: [],
+        emails: [],
+        addresses: [],
+        urls: [],
+        imHandles: [],
+        locations: [],
+        customFields: [],
+        customFieldValues: [],
+        importantDates: [],
+        relationshipsFrom: [],
+        groups: [],
+        ...overrides,
+      };
+    }
+
+    it('should use cardDavDisplayName override when set', () => {
+      const person = buildPerson({ cardDavDisplayName: 'Mom' });
+      const vcard = personToVCard(person, { cardDavNameFormat: 'FULL' });
+
+      expect(vcard).toContain('FN:Mom');
+      // N field should still have the real structured name
+      expect(vcard).toContain('N:Gonzalez;Maria;;;');
+    });
+
+    it('should use NICKNAME_PREFERRED format for FN', () => {
+      const person = buildPerson();
+      const vcard = personToVCard(person, { cardDavNameFormat: 'NICKNAME_PREFERRED' });
+
+      expect(vcard).toContain('FN:Mom Gonzalez');
+    });
+
+    it('should use SHORT format for FN', () => {
+      const person = buildPerson();
+      const vcard = personToVCard(person, { cardDavNameFormat: 'SHORT' });
+
+      expect(vcard).toContain('FN:Mom');
+    });
+
+    it('should use FULL format by default (no option)', () => {
+      const person = buildPerson();
+      const vcard = personToVCard(person);
+
+      expect(vcard).toContain('FN:Maria Gonzalez');
+    });
+
+    it('should use FULL format when explicitly set', () => {
+      const person = buildPerson();
+      const vcard = personToVCard(person, { cardDavNameFormat: 'FULL' });
+
+      expect(vcard).toContain('FN:Maria Gonzalez');
+    });
+
+    it('should prioritize cardDavDisplayName over cardDavNameFormat', () => {
+      const person = buildPerson({ cardDavDisplayName: 'Mama' });
+      const vcard = personToVCard(person, { cardDavNameFormat: 'SHORT' });
+
+      expect(vcard).toContain('FN:Mama');
+    });
+
+    it('should use NICKNAME_PREFERRED with EASTERN name order', () => {
+      const person = buildPerson();
+      const vcard = personToVCard(person, {
+        cardDavNameFormat: 'NICKNAME_PREFERRED',
+        nameOrder: 'EASTERN',
+      });
+
+      expect(vcard).toContain('FN:Gonzalez Mom');
+    });
+
+    it('should fall back to name when no nickname for SHORT format', () => {
+      const person = buildPerson({ nickname: null });
+      const vcard = personToVCard(person, { cardDavNameFormat: 'SHORT' });
+
+      expect(vcard).toContain('FN:Maria');
+    });
+  });
 });

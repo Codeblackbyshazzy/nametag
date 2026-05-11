@@ -22,8 +22,7 @@ export default async function AppearanceSettingsPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { theme: true, dateFormat: true, language: true, nameOrder: true, nameDisplayFormat: true, graphMode: true,
-    },
+    select: { theme: true, dateFormat: true, language: true, nameOrder: true, nameDisplayFormat: true, graphMode: true },
   });
 
   const currentTheme = user?.theme || 'DARK';
@@ -60,8 +59,7 @@ export default async function AppearanceSettingsPage() {
         <h2 className="text-xl font-bold text-foreground mb-4">
           {t('dateFormatTitle')}
         </h2>
-        <DateFormatSelector userId={session.user.id} currentFormat={currentDateFormat}
-        />
+        <DateFormatSelector userId={session.user.id} currentFormat={currentDateFormat} />
       </div>
 
       {/* Name Display Order Settings */}

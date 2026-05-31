@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.48.1](https://github.com/mattogodoy/nametag/compare/v0.48.0...v0.48.1) (2026-05-31)
+
+
+### Bug Fixes
+
+* harden API routes for bearer token compatibility ([43de2d3](https://github.com/mattogodoy/nametag/commit/43de2d345d5b548bed9b001734a0937311544bc8))
+* harden API routes for bearer token compatibility ([b5e570a](https://github.com/mattogodoy/nametag/commit/b5e570adc6cf35f6bbe4b95c97564dd09d49a6e6))
+* update groups test to expect random color default ([8b4d4d5](https://github.com/mattogodoy/nametag/commit/8b4d4d53bf9aff12947972e333ad6e18704cc92b))
+
 ## [0.48.0](https://github.com/mattogodoy/nametag/compare/v0.47.4...v0.48.0) (2026-05-31)
 
 

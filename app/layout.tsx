@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import SessionProvider from "@/components/SessionProvider";
 import ThemeProvider from "@/components/ThemeProvider";
+import { SearchIndexProvider } from "@/components/SearchIndexProvider";
 import LocaleSync from "@/components/LocaleSync";
 import { Toaster } from "sonner";
 import { auth } from "@/lib/auth";
@@ -57,7 +58,9 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <SessionProvider>
             <ThemeProvider initialTheme={initialTheme}>
-              {children}
+              <SearchIndexProvider>
+                {children}
+              </SearchIndexProvider>
             </ThemeProvider>
           </SessionProvider>
           <LocaleSync locale={locale} />

@@ -62,8 +62,8 @@ describe('search-index', () => {
     it('should find people accent-insensitive', () => {
       const docs: SearchDocument[] = [{
         ...testDocuments[0],
-        name: 'Maria',
-        surname: 'Garcia',
+        name: 'María',
+        surname: 'García',
       }];
       const index = createSearchIndex(docs);
       const results = searchIndex(index, 'garcia');

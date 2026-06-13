@@ -60,6 +60,7 @@ export function searchIndex(
 ): PersonSearchResult[] {
   if (!query.trim()) return [];
 
+  // AND: all query words must appear on the same person
   const results = index.search(query, {
     fuzzy: 0.2,
     prefix: true,

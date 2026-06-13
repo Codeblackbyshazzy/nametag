@@ -3,6 +3,9 @@ import { updateGroupSchema, validateRequest } from '@/lib/validations';
 import { apiResponse, handleApiError, parseRequestBody, withAuth } from '@/lib/api-utils';
 import { getRandomColor } from '@/lib/colors';
 import { syncGroupMembersToCardDav } from '@/lib/carddav/group-sync';
+import { createModuleLogger } from '@/lib/logger';
+
+const log = createModuleLogger('groups');
 
 // GET /api/groups/[id] - Get a single group
 export const GET = withAuth(async (_request, session, context) => {
@@ -94,7 +97,10 @@ export const PUT = withAuth(async (request, session, context) => {
     });
 
     if (nameChanged) {
-      syncGroupMembersToCardDav(id, session.user.id).catch(() => {});
+      syncGroupMembersToCardDav(id, session.user.id).catch((error) => {
+        log.error({ err: error instanceof Error ? error : new Error(String(error)), groupId: id },
+          'CardDAV sync after group rename failed');
+      });
     }
 
     return apiResponse.ok({ group });
@@ -161,7 +167,10 @@ export const DELETE = withAuth(async (request, session, context) => {
     });
 
     if (memberPersonIds.length > 0 && !deletePeople) {
-      syncGroupMembersToCardDav(id, session.user.id, memberPersonIds).catch(() => {});
+      syncGroupMembersToCardDav(id, session.user.id, memberPersonIds).catch((error) => {
+        log.error({ err: error instanceof Error ? error : new Error(String(error)), groupId: id },
+          'CardDAV sync after group deletion failed');
+      });
     }
 
     return apiResponse.message('Group deleted successfully');

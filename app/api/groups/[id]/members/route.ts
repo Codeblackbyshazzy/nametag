@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { addGroupMemberSchema, validateRequest } from '@/lib/validations';
 import { apiResponse, handleApiError, parseRequestBody, withAuth } from '@/lib/api-utils';
 import { autoUpdatePerson } from '@/lib/carddav/auto-export';
+import { createModuleLogger } from '@/lib/logger';
+
+const log = createModuleLogger('groups');
 
 // POST /api/groups/[id]/members - Add a member to a group
 export const POST = withAuth(async (request, session, context) => {
@@ -65,7 +68,10 @@ export const POST = withAuth(async (request, session, context) => {
     });
 
     if (person.cardDavSyncEnabled) {
-      autoUpdatePerson(personId).catch(() => {});
+      autoUpdatePerson(personId).catch((error) => {
+        log.error({ err: error instanceof Error ? error : new Error(String(error)), personId },
+          'CardDAV auto-update after group member addition failed');
+      });
     }
 
     return apiResponse.success();

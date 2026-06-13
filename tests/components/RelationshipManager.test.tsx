@@ -12,6 +12,11 @@ vi.mock('sonner', () => ({
   },
 }));
 
+// Mock SearchIndexProvider
+vi.mock('../../components/SearchIndexProvider', () => ({
+  useSearchIndex: () => ({ refreshIndex: vi.fn(), search: vi.fn(), isReady: false }),
+}));
+
 // Store the onChange callback so tests can simulate person selection
 let capturedOnChange: ((personId: string, personName: string) => void) | null = null;
 

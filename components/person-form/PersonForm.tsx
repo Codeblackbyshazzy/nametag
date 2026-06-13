@@ -24,6 +24,7 @@ import { Button } from '../ui/Button';
 import CardDavSyncSection from './CardDavSyncSection';
 import CustomFieldsSection from '../customFields/CustomFieldsSection';
 import type { CustomFieldTemplate } from '@prisma/client';
+import { useSearchIndex } from '@/components/SearchIndexProvider';
 
 type ReminderIntervalUnit = 'DAYS' | 'WEEKS' | 'MONTHS' | 'YEARS';
 
@@ -157,6 +158,7 @@ export default function PersonForm({
   const t = useTranslations('people.form');
   const tPhoto = useTranslations('people.photo');
   const router = useRouter();
+  const { refreshIndex } = useSearchIndex();
 
   const {
     state,
@@ -371,6 +373,7 @@ export default function PersonForm({
       if (mode === 'edit' && person?.id) {
         router.push(`/people/${person.id}`);
         router.refresh();
+        refreshIndex();
       } else if (mode === 'create' && addAnother) {
         const params = new URLSearchParams();
         if (initialKnownThrough) {
@@ -380,18 +383,22 @@ export default function PersonForm({
           params.set('relationshipType', initialRelationshipType);
         }
         const queryString = params.toString();
+        refreshIndex();
         window.location.href = queryString
           ? `/people/new?${queryString}`
           : '/people/new';
       } else if (mode === 'create' && knownThroughId !== 'user') {
         router.push(`/people/${knownThroughId}`);
         router.refresh();
+        refreshIndex();
       } else if (mode === 'create' && data.person?.id) {
         router.push(`/people/${data.person.id}`);
         router.refresh();
+        refreshIndex();
       } else {
         router.push('/people');
         router.refresh();
+        refreshIndex();
       }
     } catch {
       setError(t('errorSomethingWrong'));

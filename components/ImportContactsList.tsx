@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { parseVCard as vCardToPerson } from '@/lib/carddav/vcard-parser';
 import CompactContactRow from './CompactContactRow';
 import GroupsSelector from './GroupsSelector';
+import { useSearchIndex } from '@/components/SearchIndexProvider';
 
 interface PendingImport {
   id: string;
@@ -43,6 +44,7 @@ export default function ImportContactsList({
 }: ImportContactsListProps) {
   const t = useTranslations('settings.carddav.import');
   const router = useRouter();
+  const { refreshIndex } = useSearchIndex();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const [perContactGroups, setPerContactGroups] = useState<Map<string, string[]>>(new Map());
@@ -183,6 +185,7 @@ export default function ImportContactsList({
         errors: data.errors.toString(),
       });
       const redirectUrl = isFileImport ? '/people' : '/settings/carddav';
+      refreshIndex();
       router.push(`${redirectUrl}?${params.toString()}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('importFailed'));

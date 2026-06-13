@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import ConfirmationModal from './ui/ConfirmationModal';
+import { useSearchIndex } from './SearchIndexProvider';
 
 interface Orphan {
   id: string;
@@ -29,6 +30,7 @@ export default function BulkDeleteModal({
   onSuccess,
 }: BulkDeleteModalProps) {
   const t = useTranslations('people.bulk');
+  const { refreshIndex } = useSearchIndex();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orphans, setOrphans] = useState<Orphan[]>([]);
@@ -95,6 +97,7 @@ export default function BulkDeleteModal({
       });
 
       if (response.ok) {
+        refreshIndex();
         onSuccess();
       } else {
         const data = await response.json();

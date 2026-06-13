@@ -9,6 +9,7 @@ import PersonAutocomplete from './PersonAutocomplete';
 import { formatGraphName, type NameDisplayFormat } from '@/lib/nameUtils';
 import { Button } from './ui/Button';
 import PersonAvatar from './PersonPhoto';
+import { useSearchIndex } from './SearchIndexProvider';
 
 interface Person {
   id: string;
@@ -67,6 +68,7 @@ export default function RelationshipManager({
   const t = useTranslations('people');
   const tCommon = useTranslations('common');
   const router = useRouter();
+  const { refreshIndex } = useSearchIndex();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -130,6 +132,7 @@ export default function RelationshipManager({
         setShowAddModal(false);
         setFormData({ relatedPersonId: '', relationshipTypeId: defaultTypeId, notes: '' });
         router.refresh();
+        refreshIndex();
         return;
       }
 
@@ -161,6 +164,7 @@ export default function RelationshipManager({
       setShowAddModal(false);
       setFormData({ relatedPersonId: '', relationshipTypeId: defaultTypeId, notes: '' });
       router.refresh();
+      refreshIndex();
     } catch (_error) {
       setError('Unable to connect to server. Please check your connection and try again.');
     } finally {
@@ -198,6 +202,7 @@ export default function RelationshipManager({
       setShowEditModal(false);
       setSelectedRelationship(null);
       router.refresh();
+      refreshIndex();
     } catch (_error) {
       setError('Unable to connect to server. Please check your connection and try again.');
     } finally {
@@ -225,6 +230,7 @@ export default function RelationshipManager({
       setShowDeleteModal(false);
       setSelectedRelationship(null);
       router.refresh();
+      refreshIndex();
     } catch (_error) {
       setError('Unable to connect to server. Please check your connection and try again.');
     } finally {

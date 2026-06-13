@@ -15,6 +15,7 @@ import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import PersonAutocomplete from '@/components/PersonAutocomplete';
 import { DuplicateCandidateDisplay } from '@/components/DuplicatesList';
 import type { NameDisplayFormat } from '@/lib/nameUtils';
+import { useSearchIndex } from '@/components/SearchIndexProvider';
 
 interface PersonForSearch {
   id: string;
@@ -51,6 +52,7 @@ export default function PersonActionsMenu({
   const tDup = useTranslations('people.duplicates');
   const tMerge = useTranslations('people.merge');
   const router = useRouter();
+  const { refreshIndex } = useSearchIndex();
 
   // Dropdown state
   const [menuOpen, setMenuOpen] = useState(false);
@@ -253,6 +255,7 @@ export default function PersonActionsMenu({
       if (response.ok) {
         router.push('/people');
         router.refresh();
+        refreshIndex();
       } else {
         const data = await response.json();
         setDeleteError(data.error || t('deletePersonFailed'));

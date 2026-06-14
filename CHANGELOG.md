@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.49.0](https://github.com/mattogodoy/nametag/compare/v0.48.1...v0.49.0) (2026-06-14)
+
+
+### Features
+
+* add minisearch dependency for client-side search ([1dfab4f](https://github.com/mattogodoy/nametag/commit/1dfab4fe19daef0c3c1dd257bdb52809a34d071e))
+* add MiniSearch index logic with fuzzy and accent-insensitive search ([f7f1760](https://github.com/mattogodoy/nametag/commit/f7f176046f0956d5d691d9cf5d155851d6753fee))
+* add search-index API endpoint with denormalized person data ([3bab042](https://github.com/mattogodoy/nametag/commit/3bab042f17bb28f5df5dba161f88b5fd4f2ff8a2))
+* add SearchIndexProvider and wire into app layout ([f043b63](https://github.com/mattogodoy/nametag/commit/f043b639a04f2aad517a6f2850603b635c81e56b))
+* add SearchIndexProvider with React context for client-side search ([b8c92fc](https://github.com/mattogodoy/nametag/commit/b8c92fc1f9b03a8908e16f85a81e1f0d4ad354a8))
+* full-text search across all person data ([ad31c32](https://github.com/mattogodoy/nametag/commit/ad31c32573bebe5ca2af7f2183656d4fa66e60fe))
+* switch NavigationSearch to client-side MiniSearch index ([fda104b](https://github.com/mattogodoy/nametag/commit/fda104be6e1cdf033ab4fe183e06630d4ce55144))
+* wire refreshIndex() into all mutation points ([59276df](https://github.com/mattogodoy/nametag/commit/59276df7ed5756650d70a9f78f92a36daa3316d1))
+
+
+### Bug Fixes
+
+* address review findings for CardDAV group sync ([59f8b92](https://github.com/mattogodoy/nametag/commit/59f8b92a489788183f7a88140a67cfc7f72e2c8a))
+* extract fetchAndBuildIndex to satisfy react-hooks/set-state-in-effect lint rule ([762f859](https://github.com/mattogodoy/nametag/commit/762f85912bfc89d416d3e4ea97bbde843d1d05a6))
+* import all contact fields from JSON export ([e9c0c04](https://github.com/mattogodoy/nametag/commit/e9c0c04ddc636a9e906315dfced04b7049c8dad0))
+* import all contact fields from JSON export ([9b71ad1](https://github.com/mattogodoy/nametag/commit/9b71ad1c631ccddb37815fa217ef15d6bc8d3f11)), closes [#298](https://github.com/mattogodoy/nametag/issues/298)
+* remove unnecessary RouteContext arg from search-index test ([c315d92](https://github.com/mattogodoy/nametag/commit/c315d922dd563bace30aaaba8757e0b87671adc7))
+* sync group changes to CardDAV server ([7e9e344](https://github.com/mattogodoy/nametag/commit/7e9e344aca418bc2f83358164250e080ea351d8e))
+* sync group changes to CardDAV server ([f67c442](https://github.com/mattogodoy/nametag/commit/f67c4426fe03660de19107752487aa64b340b819)), closes [#287](https://github.com/mattogodoy/nametag/issues/287)
+* use accented chars in accent-insensitive test, add AND rationale comment ([f77387e](https://github.com/mattogodoy/nametag/commit/f77387ed2b7ece4d83f7c921c3cf6e49ac418828))
+
 ## [0.48.1](https://github.com/mattogodoy/nametag/compare/v0.48.0...v0.48.1) (2026-05-31)
 
 

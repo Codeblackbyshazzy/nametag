@@ -124,6 +124,51 @@ export function peoplePaths(): Record<string, Record<string, unknown>> {
         },
       },
     },
+    '/api/people/search-index': {
+      get: {
+        tags: ['People'],
+        summary: 'Get search index data',
+        description:
+          'Returns all searchable data for the authenticated user\'s contacts in a flat, ' +
+          'denormalized format optimized for client-side indexing. Multi-value fields ' +
+          '(phones, emails, addresses, etc.) are joined into single strings.',
+        security: [{ session: [] }],
+        responses: {
+          '200': jsonResponse('Search index data', {
+            type: 'object',
+            properties: {
+              people: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    surname: { type: 'string', nullable: true },
+                    middleName: { type: 'string', nullable: true },
+                    secondLastName: { type: 'string', nullable: true },
+                    nickname: { type: 'string', nullable: true },
+                    organization: { type: 'string', nullable: true },
+                    jobTitle: { type: 'string', nullable: true },
+                    notes: { type: 'string', nullable: true },
+                    phones: { type: 'string', description: 'All phone numbers, space-joined' },
+                    emails: { type: 'string', description: 'All email addresses, space-joined' },
+                    addresses: { type: 'string', description: 'All address components, space-joined' },
+                    urls: { type: 'string', description: 'All URLs, space-joined' },
+                    imHandles: { type: 'string', description: 'All IM handles, space-joined' },
+                    groups: { type: 'string', description: 'All group names, space-joined' },
+                    customFields: { type: 'string', description: 'All custom field key-value pairs, space-joined' },
+                    photo: { type: 'string', nullable: true },
+                  },
+                  required: ['id', 'name', 'phones', 'emails', 'addresses', 'urls', 'imHandles', 'groups', 'customFields'],
+                },
+              },
+            },
+          }),
+          '401': ref401(),
+        },
+      },
+    },
     '/api/people/{id}/orphans': {
       get: {
         tags: ['People'],

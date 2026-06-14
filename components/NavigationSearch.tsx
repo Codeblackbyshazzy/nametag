@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { formatFullName } from '@/lib/nameUtils';
 import PersonAvatar from './PersonPhoto';
+import { useSearchIndex } from './SearchIndexProvider';
 
 interface Person {
   id: string;
   name: string;
   surname?: string | null;
+  middleName?: string | null;
+  secondLastName?: string | null;
   nickname?: string | null;
   photo?: string | null;
 }
@@ -23,6 +26,7 @@ export default function NavigationSearch() {
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [nameOrder, setNameOrder] = useState<'WESTERN' | 'EASTERN'>('WESTERN');
+  const { search: clientSearch, isReady: searchIndexReady } = useSearchIndex();
 
   // Fetch user's name order preference
   useEffect(() => {
@@ -54,45 +58,50 @@ export default function NavigationSearch() {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const itemRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
 
-  // Debounced server-side search
-  const performSearch = useCallback(async (query: string) => {
-    if (query.length === 0) {
+  // Search: instant client-side when index is ready, server fallback otherwise
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    if (!searchTerm.trim()) {
       setResults([]);
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/people/search?q=${encodeURIComponent(query)}`);
-      const data = await response.json();
-      if (data.people && Array.isArray(data.people)) {
-        setResults(data.people);
-      }
-    } catch (error) {
-      console.error('Search failed:', error);
-      setResults([]);
-    } finally {
+    if (searchIndexReady) {
+      setResults(clientSearch(searchTerm));
       setIsLoading(false);
-    }
-  }, []);
-
-  // Debounce search input
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+      return;
     }
 
-    debounceTimerRef.current = setTimeout(() => {
-      performSearch(searchTerm);
+    // Fallback: server-side search with debounce
+    setIsLoading(true);
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/people/search?q=${encodeURIComponent(searchTerm)}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setResults(data.people || []);
+        }
+      } catch {
+        setResults([]);
+      } finally {
+        setIsLoading(false);
+      }
     }, 300);
 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
     };
-  }, [searchTerm, performSearch]);
+  }, [searchTerm, searchIndexReady, clientSearch]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import ConfirmationModal from './ui/ConfirmationModal';
+import { useSearchIndex } from './SearchIndexProvider';
 
 interface RelationshipType {
   id: string;
@@ -31,6 +32,7 @@ export default function BulkRelationshipModal({
   onSuccess,
 }: BulkRelationshipModalProps) {
   const t = useTranslations('people.bulk');
+  const { refreshIndex } = useSearchIndex();
   const [selectedTypeId, setSelectedTypeId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +70,7 @@ export default function BulkRelationshipModal({
         toast.success(t('setRelationshipSuccess', { count: data.affectedCount }));
         setSelectedTypeId('');
         setIsSubmitting(false);
+        refreshIndex();
         onSuccess();
       } else {
         const data = await response.json();

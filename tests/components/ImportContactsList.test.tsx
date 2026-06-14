@@ -26,6 +26,11 @@ vi.mock('sonner', () => ({
   },
 }));
 
+// Mock SearchIndexProvider
+vi.mock('@/components/SearchIndexProvider', () => ({
+  useSearchIndex: () => ({ refreshIndex: vi.fn(), search: vi.fn(), isReady: false }),
+}));
+
 describe('ImportContactsList', () => {
   const mockPush = vi.fn();
   const mockRefresh = vi.fn();

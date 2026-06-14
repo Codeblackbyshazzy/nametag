@@ -32,6 +32,11 @@ vi.mock('sonner', () => ({
   },
 }));
 
+// Mock SearchIndexProvider
+vi.mock('@/components/SearchIndexProvider', () => ({
+  useSearchIndex: () => ({ refreshIndex: vi.fn(), search: vi.fn(), isReady: false }),
+}));
+
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
     <NextIntlClientProvider locale="en" messages={enMessages}>

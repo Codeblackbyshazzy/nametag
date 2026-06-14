@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import ConfirmationModal from './ui/ConfirmationModal';
 import GroupsSelector from './GroupsSelector';
+import { useSearchIndex } from './SearchIndexProvider';
 
 interface Group {
   id: string;
@@ -34,6 +35,7 @@ export default function BulkGroupAssignModal({
   onGroupCreated,
 }: BulkGroupAssignModalProps) {
   const t = useTranslations('people.bulk');
+  const { refreshIndex } = useSearchIndex();
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +72,7 @@ export default function BulkGroupAssignModal({
         const data = await response.json();
         toast.success(t('addToGroupsSuccess', { count: data.affectedCount }));
         setSelectedGroupIds([]);
+        refreshIndex();
         onSuccess();
       } else {
         const data = await response.json();

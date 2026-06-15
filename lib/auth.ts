@@ -243,8 +243,9 @@ const providers = [
           clientId: env.OIDC_CLIENT_ID,
           clientSecret: env.OIDC_CLIENT_SECRET,
           authorization: { params: { scope: 'openid email profile' } },
-          // Fetch claims from /userinfo instead of relying solely on the ID token.
-          // Many providers (Authentik, Keycloak) put email/name only in userinfo.
+          // Use /userinfo instead of ID-token claims. Many providers
+          // (Authentik, Keycloak) put email/name only in userinfo.
+          idToken: false,
           profile(profile: Record<string, unknown>) {
             if (!profile.email || typeof profile.email !== 'string') {
               throw new Error('OIDC provider did not return an email address');

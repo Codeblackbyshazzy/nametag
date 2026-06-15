@@ -596,6 +596,105 @@ describe('CardDAV Sync Engine', () => {
       });
     });
 
+    describe('photo mismatch detection', () => {
+      it('should mark as pending when local person has photo but remote vCard does not', async () => {
+        const uid = 'photo-uid';
+        const mappingId = 'mapping-photo';
+
+        mocks.cardDavMappingFindMany.mockResolvedValue([
+          makeLightMapping({
+            id: mappingId,
+            uid,
+            etag: 'etag-old',
+            lastLocalChange: null,
+            lastSyncedAt: new Date('2025-01-01'),
+          }),
+        ]);
+
+        mocks.fetchVCards.mockResolvedValue([
+          makeVCard(uid, '/contacts/photo.vcf', 'etag-new', 'HasPhoto'),
+        ]);
+
+        // Remote vCard has no photo
+        mocks.vCardToPerson.mockReturnValue(makeParsedVCard(uid, 'HasPhoto'));
+
+        // Local person has a photo
+        mocks.cardDavMappingFindFirst.mockResolvedValue(
+          makeFullMapping({
+            id: mappingId,
+            uid,
+            etag: 'etag-old',
+            lastLocalChange: null,
+            lastSyncedAt: new Date('2025-01-01'),
+            person: { photo: 'person-1.jpg' },
+          })
+        );
+        mocks.$transaction.mockResolvedValue([]);
+        mocks.cardDavPendingImportCount.mockResolvedValue(0);
+
+        await syncFromServer(USER_ID);
+
+        // Mapping should be marked as pending (not synced)
+        const updateCall = mocks.cardDavMappingUpdate.mock.calls.find(
+          (call: unknown[]) => {
+            const arg = call[0] as { where: { id: string }; data: { syncStatus?: string } };
+            return arg.where.id === mappingId && arg.data.syncStatus !== undefined;
+          }
+        );
+        expect(updateCall).toBeDefined();
+        const updateData = (updateCall![0] as { data: { syncStatus: string; lastLocalChange?: Date } }).data;
+        expect(updateData.syncStatus).toBe('pending');
+        expect(updateData.lastLocalChange).toBeInstanceOf(Date);
+      });
+
+      it('should mark as synced when both local and remote have no photo', async () => {
+        const uid = 'no-photo-uid';
+        const mappingId = 'mapping-no-photo';
+
+        mocks.cardDavMappingFindMany.mockResolvedValue([
+          makeLightMapping({
+            id: mappingId,
+            uid,
+            etag: 'etag-old',
+            lastLocalChange: null,
+            lastSyncedAt: new Date('2025-01-01'),
+          }),
+        ]);
+
+        mocks.fetchVCards.mockResolvedValue([
+          makeVCard(uid, '/contacts/no-photo.vcf', 'etag-new', 'NoPhoto'),
+        ]);
+
+        // Remote vCard has no photo
+        mocks.vCardToPerson.mockReturnValue(makeParsedVCard(uid, 'NoPhoto'));
+
+        // Local person also has no photo
+        mocks.cardDavMappingFindFirst.mockResolvedValue(
+          makeFullMapping({
+            id: mappingId,
+            uid,
+            etag: 'etag-old',
+            lastLocalChange: null,
+            lastSyncedAt: new Date('2025-01-01'),
+            person: { photo: null },
+          })
+        );
+        mocks.$transaction.mockResolvedValue([]);
+        mocks.cardDavPendingImportCount.mockResolvedValue(0);
+
+        await syncFromServer(USER_ID);
+
+        const updateCall = mocks.cardDavMappingUpdate.mock.calls.find(
+          (call: unknown[]) => {
+            const arg = call[0] as { where: { id: string }; data: { syncStatus?: string } };
+            return arg.where.id === mappingId && arg.data.syncStatus !== undefined;
+          }
+        );
+        expect(updateCall).toBeDefined();
+        expect((updateCall![0] as { data: { syncStatus: string } }).data.syncStatus).toBe('synced');
+      });
+    });
+
     describe('exported contacts scenario', () => {
       it('should not re-import contacts that were just exported (UID rewrite)', async () => {
         // Pre-loaded mapping: exported contact with local UID and known href

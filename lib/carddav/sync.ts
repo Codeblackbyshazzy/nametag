@@ -384,6 +384,19 @@ export async function syncFromServer(
               }
             }
 
+            // Photo mismatch: local person has a photo but the remote vCard
+            // does not. Many servers strip PHOTO during normalization. Mark
+            // as pending so the push phase re-exports with the photo.
+            if (!parsedData.photo && fullMapping.person.photo) {
+              if (syncStatusAfterImport !== 'pending') {
+                log.info(
+                  { event: 'carddav.photo_mismatch', personId: fullMapping.personId },
+                  'Local person has photo but remote vCard does not; marking pending for re-export',
+                );
+              }
+              syncStatusAfterImport = 'pending';
+            }
+
             await prisma.cardDavMapping.update({
               where: { id: mapping.id },
               data: {

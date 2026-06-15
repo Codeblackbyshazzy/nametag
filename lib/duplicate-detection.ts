@@ -27,21 +27,31 @@ export interface PersonForComparison {
   id: string;
   name: string;
   surname: string | null;
+  emails: string[];
+  phones: string[];
+  birthdays: Date[];
 }
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-// Minimum similarity score (0–1) for two names to be considered potential duplicates.
-// 0.75 balances recall (catching "Robert" / "Roberto") vs precision (avoiding false positives).
 const SIMILARITY_THRESHOLD = 0.75;
 
-// When both people have surnames, similarity is a weighted average of
-// first-name similarity (60%) and surname similarity (40%). This prevents
-// shared surnames from inflating the score when first names are different.
-const NAME_WEIGHT = 0.6;
-const SURNAME_WEIGHT = 0.4;
+const FIRST_NAME_WEIGHT = 0.6;
+const SURNAME_WEIGHT_INNER = 0.4;
+
+const SIGNAL_WEIGHTS = {
+  name: 0.4,
+  email: 0.3,
+  phone: 0.2,
+  birthday: 0.1,
+} as const;
+
+const SPARSITY_CAP = 0.6;
+const MIN_SIGNALS_FOR_FULL_SCORE = 2;
+const AUTO_FLAG_MIN_SCORE = 0.85;
+const NAME_ONLY_BYPASS_THRESHOLD = 0.95;
 
 // ---------------------------------------------------------------------------
 // Core algorithms
@@ -113,31 +123,109 @@ function normalizePart(s: string): string {
   return normalizeForSearch(s.trim());
 }
 
-/**
- * Compute similarity between two people, taking name parts into account.
- *
- * When both have surnames, scores name and surname separately with a
- * weighted average (60% name, 40% surname) so a shared surname alone
- * doesn't inflate the match.
- *
- * Falls back to full-string comparison when either person lacks a surname.
- */
-function personSimilarity(
-  nameA: string,
-  surnameA: string | null,
-  nameB: string,
-  surnameB: string | null
-): number {
-  if (surnameA && surnameB) {
-    const nameSim = stringSimilarity(normalizePart(nameA), normalizePart(nameB));
-    const surSim = stringSimilarity(normalizePart(surnameA), normalizePart(surnameB));
-    return nameSim * NAME_WEIGHT + surSim * SURNAME_WEIGHT;
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+export function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+interface SimilarityResult {
+  score: number;
+  autoFlagged: boolean;
+}
+
+function nameSimilarity(a: PersonForComparison, b: PersonForComparison): number {
+  if (a.surname && b.surname) {
+    const nameSim = stringSimilarity(normalizePart(a.name), normalizePart(b.name));
+    const surSim = stringSimilarity(normalizePart(a.surname), normalizePart(b.surname));
+    return nameSim * FIRST_NAME_WEIGHT + surSim * SURNAME_WEIGHT_INNER;
+  }
+  const fullA = normalizePart([a.name, a.surname].filter(Boolean).join(' '));
+  const fullB = normalizePart([b.name, b.surname].filter(Boolean).join(' '));
+  return stringSimilarity(fullA, fullB);
+}
+
+function emailSignal(a: PersonForComparison, b: PersonForComparison): { comparable: boolean; score: number; exactMatch: boolean } {
+  if (a.emails.length === 0 || b.emails.length === 0) {
+    return { comparable: false, score: 0, exactMatch: false };
+  }
+  const setB = new Set(b.emails);
+  const exactMatch = a.emails.some((e) => setB.has(e));
+  return { comparable: true, score: exactMatch ? 1.0 : 0.0, exactMatch };
+}
+
+function phoneSignal(a: PersonForComparison, b: PersonForComparison): { comparable: boolean; score: number; exactMatch: boolean } {
+  if (a.phones.length === 0 || b.phones.length === 0) {
+    return { comparable: false, score: 0, exactMatch: false };
+  }
+  const setB = new Set(b.phones);
+  const exactMatch = a.phones.some((p) => setB.has(p));
+  return { comparable: true, score: exactMatch ? 1.0 : 0.0, exactMatch };
+}
+
+function birthdaySignal(a: PersonForComparison, b: PersonForComparison): { comparable: boolean; score: number } {
+  if (a.birthdays.length === 0 || b.birthdays.length === 0) {
+    return { comparable: false, score: 0 };
+  }
+  let best = 0;
+  for (const da of a.birthdays) {
+    for (const db of b.birthdays) {
+      if (da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate()) {
+        best = 1.0;
+        break;
+      }
+      if (da.getMonth() === db.getMonth() && da.getDate() === db.getDate()) {
+        best = Math.max(best, 0.5);
+      }
+    }
+    if (best === 1.0) break;
+  }
+  // Only treat birthday as comparable when there is at least a partial match
+  // (same month and day). Completely different dates provide no useful signal.
+  return { comparable: best > 0, score: best };
+}
+
+export function compositeSimilarity(a: PersonForComparison, b: PersonForComparison): SimilarityResult {
+  const nameScore = nameSimilarity(a, b);
+  const email = emailSignal(a, b);
+  const phone = phoneSignal(a, b);
+  const birthday = birthdaySignal(a, b);
+
+  const hasStrongIdMatch = email.exactMatch;
+
+  const signals: Array<{ weight: number; score: number }> = [
+    { weight: SIGNAL_WEIGHTS.name, score: nameScore },
+  ];
+  let comparableCount = 1;
+
+  if (email.comparable) {
+    signals.push({ weight: SIGNAL_WEIGHTS.email, score: email.score });
+    comparableCount++;
+  }
+  if (phone.comparable) {
+    signals.push({ weight: SIGNAL_WEIGHTS.phone, score: phone.score });
+    comparableCount++;
+  }
+  if (birthday.comparable) {
+    signals.push({ weight: SIGNAL_WEIGHTS.birthday, score: birthday.score });
+    comparableCount++;
   }
 
-  // Fallback: compare full concatenated strings
-  const fullA = normalizePart([nameA, surnameA].filter(Boolean).join(' '));
-  const fullB = normalizePart([nameB, surnameB].filter(Boolean).join(' '));
-  return stringSimilarity(fullA, fullB);
+  const totalWeight = signals.reduce((sum, s) => sum + s.weight, 0);
+  let score = signals.reduce((sum, s) => sum + (s.weight / totalWeight) * s.score, 0);
+
+  if (comparableCount < MIN_SIGNALS_FOR_FULL_SCORE && nameScore < NAME_ONLY_BYPASS_THRESHOLD) {
+    score = Math.min(score, SPARSITY_CAP);
+  }
+
+  if (hasStrongIdMatch) {
+    score = Math.max(score, AUTO_FLAG_MIN_SCORE);
+  }
+
+  return { score, autoFlagged: hasStrongIdMatch };
 }
 
 // ---------------------------------------------------------------------------
@@ -205,42 +293,34 @@ class UnionFind {
 /**
  * Find duplicate candidates for a given person.
  *
- * @param targetName    - First name of the person to check
- * @param targetSurname - Surname of the person (may be null)
- * @param people        - Full list of people to compare against
- * @param targetId      - Optional ID of the target person to exclude from results
+ * @param target   - The person to check for duplicates
+ * @param people   - Full list of people to compare against
+ * @param targetId - Optional ID of the target person to exclude from results
  * @returns Candidates whose similarity exceeds the threshold, sorted descending.
  */
 export function findDuplicates(
-  targetName: string,
-  targetSurname: string | null,
+  target: PersonForComparison,
   people: PersonForComparison[],
   targetId?: string
 ): DuplicateCandidate[] {
   const candidates: DuplicateCandidate[] = [];
 
-  for (const person of people) {
-    // Skip the target person itself
-    if (targetId && person.id === targetId) continue;
+  for (const p of people) {
+    if (targetId && p.id === targetId) continue;
 
-    const similarity = personSimilarity(
-      targetName, targetSurname,
-      person.name, person.surname
-    );
+    const { score, autoFlagged } = compositeSimilarity(target, p);
 
-    if (similarity >= SIMILARITY_THRESHOLD) {
+    if (score >= SIMILARITY_THRESHOLD || autoFlagged) {
       candidates.push({
-        personId: person.id,
-        name: person.name,
-        surname: person.surname,
-        similarity,
+        personId: p.id,
+        name: p.name,
+        surname: p.surname,
+        similarity: score,
       });
     }
   }
 
-  // Sort by similarity descending
   candidates.sort((a, b) => b.similarity - a.similarity);
-
   return candidates;
 }
 
@@ -254,9 +334,9 @@ export function buildDismissalKey(idA: string, idB: string): string {
 /**
  * Find all groups of potential duplicates across a list of people.
  *
- * Uses union-find to cluster people whose names exceed the similarity
- * threshold. Returns only groups of 2 or more, sorted by highest
- * pairwise similarity within each group (descending).
+ * Uses union-find to cluster people whose composite similarity exceeds the
+ * threshold. Returns only groups of 2 or more, sorted by highest pairwise
+ * similarity within each group (descending).
  *
  * @param dismissedPairs - Optional set of "smallerId:largerId" keys to skip.
  */
@@ -266,51 +346,43 @@ export function findAllDuplicateGroups(
 ): DuplicateGroup[] {
   const uf = new UnionFind();
 
-  for (const person of people) {
-    uf.makeSet(person.id);
+  for (const p of people) {
+    uf.makeSet(p.id);
   }
 
-  // Compare every pair using weighted name/surname similarity
   for (let i = 0; i < people.length; i++) {
     for (let j = i + 1; j < people.length; j++) {
       const a = people[i];
       const b = people[j];
 
-      // Skip dismissed pairs
       if (dismissedPairs?.has(buildDismissalKey(a.id, b.id))) continue;
 
-      const similarity = personSimilarity(a.name, a.surname, b.name, b.surname);
+      const { score, autoFlagged } = compositeSimilarity(a, b);
 
-      if (similarity >= SIMILARITY_THRESHOLD) {
+      if (score >= SIMILARITY_THRESHOLD || autoFlagged) {
         uf.union(a.id, b.id);
       }
     }
   }
 
-  // Collect groups by root
   const groups = new Map<string, PersonForComparison[]>();
-  for (const person of people) {
-    const root = uf.find(person.id);
+  for (const p of people) {
+    const root = uf.find(p.id);
     if (!groups.has(root)) {
       groups.set(root, []);
     }
-    groups.get(root)!.push(person);
+    groups.get(root)!.push(p);
   }
 
-  // Build result: only groups with 2+ members
   const result: DuplicateGroup[] = [];
   for (const [, members] of groups) {
     if (members.length < 2) continue;
 
-    // Derive max pairwise similarity within this group
     let maxSim = SIMILARITY_THRESHOLD;
     for (let i = 0; i < members.length; i++) {
       for (let j = i + 1; j < members.length; j++) {
-        const sim = personSimilarity(
-          members[i].name, members[i].surname,
-          members[j].name, members[j].surname
-        );
-        if (sim > maxSim) maxSim = sim;
+        const { score } = compositeSimilarity(members[i], members[j]);
+        if (score > maxSim) maxSim = score;
       }
     }
 
@@ -324,8 +396,44 @@ export function findAllDuplicateGroups(
     });
   }
 
-  // Sort groups by similarity descending
   result.sort((a, b) => b.similarity - a.similarity);
-
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// Database mapping
+// ---------------------------------------------------------------------------
+
+interface PersonFromDb {
+  id: string;
+  name: string;
+  surname: string | null;
+  emails: Array<{ email: string }>;
+  phoneNumbers: Array<{ number: string }>;
+  importantDates: Array<{ type: string | null; date: Date }>;
+}
+
+export function mapPersonForComparison(p: PersonFromDb): PersonForComparison {
+  return {
+    id: p.id,
+    name: p.name,
+    surname: p.surname,
+    emails: p.emails.map((e) => normalizeEmail(e.email)),
+    phones: p.phoneNumbers.map((ph) => normalizePhone(ph.number)),
+    birthdays: p.importantDates
+      .filter((d) => d.type === 'birthday')
+      .map((d) => d.date),
+  };
+}
+
+export const PERSON_SELECT_FOR_COMPARISON = {
+  id: true,
+  name: true,
+  surname: true,
+  emails: { select: { email: true } },
+  phoneNumbers: { select: { number: true } },
+  importantDates: {
+    where: { deletedAt: null, type: 'birthday' },
+    select: { type: true, date: true },
+  },
+} as const;

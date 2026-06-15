@@ -224,8 +224,9 @@ function makeParsedVCard(uid: string, name: string) {
   };
 }
 
-/** Lightweight mapping (as returned by findMany without includes) */
+/** Lightweight mapping (as returned by findMany with person.photo include) */
 function makeLightMapping(overrides: Record<string, unknown> = {}) {
+  const personOverride = typeof overrides.person === 'object' ? overrides.person as Record<string, unknown> : {};
   return {
     id: 'mapping-1',
     connectionId: CONNECTION_ID,
@@ -240,6 +241,7 @@ function makeLightMapping(overrides: Record<string, unknown> = {}) {
     localVersion: null,
     remoteVersion: null,
     ...overrides,
+    person: { photo: null, ...personOverride },
   };
 }
 
@@ -317,6 +319,7 @@ describe('CardDAV Sync Engine', () => {
         expect(mocks.cardDavMappingFindMany).toHaveBeenCalledTimes(1);
         expect(mocks.cardDavMappingFindMany).toHaveBeenCalledWith({
           where: { connectionId: CONNECTION_ID },
+          include: { person: { select: { photo: true } } },
         });
       });
 
@@ -597,7 +600,7 @@ describe('CardDAV Sync Engine', () => {
     });
 
     describe('photo mismatch detection', () => {
-      it('should mark as pending when local person has photo but remote vCard does not', async () => {
+      it('should mark as pending when remote etag changed and local has photo but remote does not', async () => {
         const uid = 'photo-uid';
         const mappingId = 'mapping-photo';
 
@@ -608,6 +611,7 @@ describe('CardDAV Sync Engine', () => {
             etag: 'etag-old',
             lastLocalChange: null,
             lastSyncedAt: new Date('2025-01-01'),
+            person: { photo: 'person-1.jpg' },
           }),
         ]);
 
@@ -692,6 +696,73 @@ describe('CardDAV Sync Engine', () => {
         );
         expect(updateCall).toBeDefined();
         expect((updateCall![0] as { data: { syncStatus: string } }).data.syncStatus).toBe('synced');
+      });
+
+      it('should heal stuck mappings where etag matches but local has photo and remote does not', async () => {
+        const uid = 'stuck-uid';
+        const mappingId = 'mapping-stuck';
+        const sameEtag = 'etag-same';
+
+        // Mapping and server vCard have identical etag (no remote change)
+        // and no local change, but local person has a photo the server lacks
+        mocks.cardDavMappingFindMany.mockResolvedValue([
+          makeLightMapping({
+            id: mappingId,
+            uid,
+            etag: sameEtag,
+            lastLocalChange: null,
+            lastSyncedAt: new Date('2025-01-01'),
+            person: { photo: 'person-stuck.jpg' },
+          }),
+        ]);
+
+        mocks.fetchVCards.mockResolvedValue([
+          makeVCard(uid, '/contacts/stuck.vcf', sameEtag, 'StuckPhoto'),
+        ]);
+
+        // Remote vCard has no photo
+        mocks.vCardToPerson.mockReturnValue(makeParsedVCard(uid, 'StuckPhoto'));
+        mocks.cardDavPendingImportCount.mockResolvedValue(0);
+
+        await syncFromServer(USER_ID);
+
+        // Should mark stuck mapping as pending even though etags match
+        expect(mocks.cardDavMappingUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { id: mappingId },
+            data: expect.objectContaining({
+              syncStatus: 'pending',
+              lastLocalChange: expect.any(Date),
+            }),
+          })
+        );
+      });
+
+      it('should not mark stuck mapping as pending when neither side has a photo', async () => {
+        const uid = 'no-photo-stuck-uid';
+        const sameEtag = 'etag-same';
+
+        mocks.cardDavMappingFindMany.mockResolvedValue([
+          makeLightMapping({
+            uid,
+            etag: sameEtag,
+            lastLocalChange: null,
+            lastSyncedAt: new Date('2025-01-01'),
+            person: { photo: null },
+          }),
+        ]);
+
+        mocks.fetchVCards.mockResolvedValue([
+          makeVCard(uid, '/contacts/no-photo.vcf', sameEtag, 'NoPhotoEither'),
+        ]);
+
+        mocks.vCardToPerson.mockReturnValue(makeParsedVCard(uid, 'NoPhotoEither'));
+        mocks.cardDavPendingImportCount.mockResolvedValue(0);
+
+        await syncFromServer(USER_ID);
+
+        // No mapping updates should happen at all (early return)
+        expect(mocks.cardDavMappingUpdate).not.toHaveBeenCalled();
       });
     });
 

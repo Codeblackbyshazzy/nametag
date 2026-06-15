@@ -159,8 +159,11 @@ export async function syncFromServer(
 
     // Pre-load all mappings for this connection in a single query.
     // Index by UID and href for O(1) lookups instead of per-vCard DB queries.
+    // Include person.photo so we can detect stuck photo mismatches without
+    // a per-vCard DB round-trip (see photo mismatch check below).
     const allMappings = await prisma.cardDavMapping.findMany({
       where: { connectionId: connection.id },
+      include: { person: { select: { photo: true } } },
     });
 
     const mappingByUid = new Map<string, typeof allMappings[number]>();
@@ -240,7 +243,20 @@ export async function syncFromServer(
             mapping.lastLocalChange > mapping.lastSyncedAt;
 
           if (!remoteChanged && !localChanged) {
-            // Nothing changed - skip without any DB queries
+            // Heal stuck mappings left by pre-862a415 syncs: local person
+            // has a photo but the server vCard does not and the mapping is
+            // already marked synced with a matching etag. Without this
+            // check these contacts would be skipped forever.
+            if (mapping.person?.photo && !parsedData.photo) {
+              await prisma.cardDavMapping.update({
+                where: { id: mapping.id },
+                data: { syncStatus: 'pending', lastLocalChange: new Date() },
+              });
+              log.info(
+                { event: 'carddav.photo_mismatch', personId: mapping.personId },
+                'Local person has photo but remote vCard does not; marking pending for re-export',
+              );
+            }
             continue;
           }
 

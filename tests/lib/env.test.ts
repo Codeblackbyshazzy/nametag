@@ -62,7 +62,7 @@ describe('env validation', () => {
         OIDC_ISSUER_URL: 'https://auth.example.com/realms/main',
         OIDC_CLIENT_ID: 'nametag',
         OIDC_CLIENT_SECRET: 'secret',
-      } as NodeJS.ProcessEnv;
+      } as unknown as NodeJS.ProcessEnv;
 
       expect(() => validateEnv()).not.toThrow();
     });
@@ -74,7 +74,7 @@ describe('env validation', () => {
         OIDC_CLIENT_ID: 'nametag',
         OIDC_CLIENT_SECRET: 'secret',
         OIDC_DISPLAY_NAME: 'Authentik',
-      } as NodeJS.ProcessEnv;
+      } as unknown as NodeJS.ProcessEnv;
 
       const result = validateEnv();
       expect(result.OIDC_DISPLAY_NAME).toBe('Authentik');
@@ -86,7 +86,7 @@ describe('env validation', () => {
         OIDC_ISSUER_URL: 'https://auth.example.com/realms/main',
         OIDC_CLIENT_ID: 'nametag',
         OIDC_CLIENT_SECRET: 'secret',
-      } as NodeJS.ProcessEnv;
+      } as unknown as NodeJS.ProcessEnv;
 
       const result = validateEnv();
       expect(result.OIDC_DISPLAY_NAME).toBe('SSO');
@@ -107,7 +107,7 @@ describe('env validation', () => {
         OIDC_CLIENT_ID: 'nametag',
         OIDC_CLIENT_SECRET: 'secret',
         DISABLE_PASSWORD_LOGIN: 'true',
-      } as NodeJS.ProcessEnv;
+      } as unknown as NodeJS.ProcessEnv;
 
       expect(() => validateEnv()).not.toThrow();
     });
@@ -118,7 +118,7 @@ describe('env validation', () => {
         OIDC_CLIENT_ID: 'nametag',
         OIDC_CLIENT_SECRET: 'secret',
         DISABLE_PASSWORD_LOGIN: 'true',
-      } as NodeJS.ProcessEnv;
+      } as unknown as NodeJS.ProcessEnv;
 
       expect(() => validateEnv()).toThrow(/OIDC_ISSUER_URL/);
     });
@@ -129,7 +129,7 @@ describe('env validation', () => {
         OIDC_ISSUER_URL: 'https://auth.example.com/realms/main',
         OIDC_CLIENT_SECRET: 'secret',
         DISABLE_PASSWORD_LOGIN: 'true',
-      } as NodeJS.ProcessEnv;
+      } as unknown as NodeJS.ProcessEnv;
 
       expect(() => validateEnv()).toThrow(/OIDC_CLIENT_ID/);
     });
@@ -138,7 +138,7 @@ describe('env validation', () => {
       process.env = {
         ...BASE_VALID_ENV,
         DISABLE_PASSWORD_LOGIN: 'true',
-      } as NodeJS.ProcessEnv;
+      } as unknown as NodeJS.ProcessEnv;
 
       expect(() => validateEnv()).toThrow(/OIDC_ISSUER_URL/);
     });
@@ -147,7 +147,7 @@ describe('env validation', () => {
       process.env = {
         ...BASE_VALID_ENV,
         DISABLE_PASSWORD_LOGIN: 'false',
-      } as NodeJS.ProcessEnv;
+      } as unknown as NodeJS.ProcessEnv;
 
       expect(() => validateEnv()).not.toThrow();
     });
